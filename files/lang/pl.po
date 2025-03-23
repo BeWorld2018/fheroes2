@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fheroes2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-09 14:16+0000\n"
+"POT-Creation-Date: 2025-03-20 14:06+0000\n"
 "PO-Revision-Date: 2024-07-20 23:19+0200\n"
 "Last-Translator: fheroes2 team <fhomm2@gmail.com>\n"
 "Language-Team: https://discord.com/"
@@ -22,56 +22,40 @@ msgstr ""
 "X-Launchpad-Export-Date: 2013-10-09 02:01+0000\n"
 "X-Generator: Poedit 3.4.4\n"
 
-msgid ""
-"NEW\n"
-"GAME"
-msgstr ""
-"NOWA\n"
-"GRA"
+msgid "SELECT"
+msgstr "WYBIERZ"
 
-msgid ""
-"SAVE\n"
-"GAME"
-msgstr ""
-"ZAPISZ\n"
-"GRĘ"
+msgid "S"
+msgstr "M"
 
-msgid ""
-"LOAD\n"
-"GAME"
-msgstr ""
-"WCZYTAJ\n"
-"GRĘ"
+msgid "M"
+msgstr "Ś"
 
-msgid "INFO"
-msgstr "INFO"
+msgid "L"
+msgstr "D"
 
-msgid "QUIT"
+msgid "X-L"
+msgstr "BD"
+
+msgid "ALL"
+msgstr "M-BD"
+
+msgid "EXIT"
 msgstr "WYJŚCIE"
 
 #, fuzzy
-msgid ""
-"NEW\n"
-"MAP"
-msgstr ""
-"NOWA\n"
-"GRA"
+msgid "smallerButton|EXIT"
+msgstr "OK"
 
-#, fuzzy
-msgid ""
-"SAVE\n"
-"MAP"
-msgstr ""
-"ZAPISZ\n"
-"GRĘ"
+msgid "HEROES"
+msgstr "BOHATEROWIE"
 
-#, fuzzy
 msgid ""
-"LOAD\n"
-"MAP"
+"TOWNS/\n"
+"CASTLES"
 msgstr ""
-"WCZYTAJ\n"
-"GRĘ"
+"MIASTA/\n"
+"ZAMKI"
 
 msgid "CANCEL"
 msgstr "ANULUJ"
@@ -97,49 +81,113 @@ msgstr "TAK"
 msgid "NO"
 msgstr "NIE"
 
-msgid "EXIT"
-msgstr "WYJŚCIE"
-
-#, fuzzy
-msgid "smallerButton|EXIT"
-msgstr "OK"
-
 msgid "DISMISS"
 msgstr "ZWOLNIJ"
 
 msgid "UPGRADE"
 msgstr "ULEPSZ"
 
+msgid "GIFT"
+msgstr "WYŚLIJ"
+
 msgid "RESTART"
 msgstr "OD NOWA"
 
-msgid "HEROES"
-msgstr "BOHATEROWIE"
+msgid "MAX"
+msgstr "MAKS"
+
+msgid "MIN"
+msgstr "MIN"
 
 msgid ""
-"TOWNS/\n"
-"CASTLES"
+"D\n"
+"I\n"
+"S\n"
+"M\n"
+"I\n"
+"S\n"
+"S"
 msgstr ""
-"MIASTA/\n"
-"ZAMKI"
 
-msgid "S"
-msgstr "M"
+msgid ""
+"E\n"
+"X\n"
+"I\n"
+"T"
+msgstr ""
 
-msgid "M"
-msgstr "Ś"
+msgid ""
+"C\n"
+"A\n"
+"M\n"
+"P\n"
+"A\n"
+"I\n"
+"G\n"
+"N"
+msgstr ""
 
-msgid "L"
-msgstr "D"
+msgid ""
+"S\n"
+"T\n"
+"A\n"
+"N\n"
+"D\n"
+"A\n"
+"R\n"
+"D"
+msgstr ""
 
-msgid "X-L"
-msgstr "BD"
+msgid ""
+"NEW\n"
+"GAME"
+msgstr ""
+"NOWA\n"
+"GRA"
 
-msgid "ALL"
-msgstr "M-BD"
+msgid ""
+"LOAD\n"
+"GAME"
+msgstr ""
+"WCZYTAJ\n"
+"GRĘ"
 
-msgid "SELECT"
-msgstr "WYBIERZ"
+msgid ""
+"SAVE\n"
+"GAME"
+msgstr ""
+"ZAPISZ\n"
+"GRĘ"
+
+msgid "QUIT"
+msgstr "WYJŚCIE"
+
+#, fuzzy
+msgid ""
+"LOAD\n"
+"MAP"
+msgstr ""
+"WCZYTAJ\n"
+"GRĘ"
+
+#, fuzzy
+msgid ""
+"NEW\n"
+"MAP"
+msgstr ""
+"NOWA\n"
+"GRA"
+
+#, fuzzy
+msgid ""
+"SAVE\n"
+"MAP"
+msgstr ""
+"ZAPISZ\n"
+"GRĘ"
+
+msgid "INFO"
+msgstr "INFO"
 
 msgid ""
 "STANDARD\n"
@@ -206,20 +254,11 @@ msgstr "5 GRACZY"
 msgid "6 PLAYERS"
 msgstr "6 GRACZY"
 
-msgid "GIFT"
-msgstr "WYŚLIJ"
-
-msgid "MAX"
-msgstr "MAKS"
-
 msgid "DIFFICULTY"
 msgstr "TRUDNOŚĆ"
 
 msgid "VIEW INTRO"
 msgstr ""
-
-msgid "MIN"
-msgstr "MIN"
 
 msgid "RESET"
 msgstr ""
@@ -228,36 +267,6 @@ msgstr ""
 msgid "START"
 msgstr "OD NOWA"
 
-msgid "TOWN"
-msgstr ""
-
-#, fuzzy
-msgid "CASTLE"
-msgstr ""
-"MIASTA/\n"
-"ZAMKI"
-
-#, fuzzy
-msgid "RESTRICT"
-msgstr "OD NOWA"
-
-msgid ""
-"D\n"
-"I\n"
-"S\n"
-"M\n"
-"I\n"
-"S\n"
-"S"
-msgstr ""
-
-msgid ""
-"E\n"
-"X\n"
-"I\n"
-"T"
-msgstr ""
-
 msgid ""
 "P\n"
 "A\n"
@@ -265,47 +274,6 @@ msgid ""
 "R\n"
 "O\n"
 "L"
-msgstr ""
-
-msgid ""
-"C\n"
-"A\n"
-"M\n"
-"P\n"
-"A\n"
-"I\n"
-"G\n"
-"N"
-msgstr ""
-
-msgid ""
-"S\n"
-"T\n"
-"A\n"
-"N\n"
-"D\n"
-"A\n"
-"R\n"
-"D"
-msgstr ""
-
-msgid "RUMORS"
-msgstr ""
-
-msgid "EVENTS"
-msgstr ""
-
-msgid "LANGUAGE"
-msgstr ""
-
-msgid ""
-"AUTO\n"
-"COMBAT"
-msgstr ""
-
-msgid ""
-"QUICK\n"
-"COMBAT"
 msgstr ""
 
 msgid "Warrior"
@@ -881,6 +849,16 @@ msgstr "Czy na pewno chcesz włączyć automatyczną walkę?"
 #, fuzzy
 msgid "Are you sure you want to resolve the battle in the quick combat mode?"
 msgstr "Czy na pewno chcesz dokończyć walkę w trybie automatycznym?"
+
+msgid ""
+"AUTO\n"
+"COMBAT"
+msgstr ""
+
+msgid ""
+"QUICK\n"
+"COMBAT"
+msgstr ""
 
 #, fuzzy
 msgid "The computer continues the combat for you."
@@ -3628,6 +3606,15 @@ msgstr "Opcje zamku"
 msgid "doubleLinedRace|Neutral"
 msgstr "Neutralny"
 
+msgid "TOWN"
+msgstr ""
+
+#, fuzzy
+msgid "CASTLE"
+msgstr ""
+"MIASTA/\n"
+"ZAMKI"
+
 #, fuzzy
 msgid "Click to start placing the selected castle/town."
 msgstr "Użyj wskazanej rozdzielczości."
@@ -3987,6 +3974,10 @@ msgstr "Zamek w chmurach"
 #, fuzzy
 msgid "Default Buildings"
 msgstr "domyślna akcja"
+
+#, fuzzy
+msgid "RESTRICT"
+msgstr "OD NOWA"
 
 #, fuzzy
 msgid "Default Army"
@@ -4791,6 +4782,15 @@ msgstr ""
 "\n"
 "Położenie pliku: "
 
+msgid "RUMORS"
+msgstr ""
+
+msgid "EVENTS"
+msgstr ""
+
+msgid "LANGUAGE"
+msgstr ""
+
 msgid ""
 "The entered map description exceeds the maximum allowed 5 rows. It will be "
 "shortened to fit the map description field."
@@ -5085,12 +5085,11 @@ msgstr "Zobacz Wprowadzenie"
 msgid "View the intro video for the current state of the campaign."
 msgstr "Zobacz filmy wprowadzające dla obecnego stanu kampanii."
 
-#, fuzzy
 msgid ""
-"Select the campaign difficulty. This can be lowered at any point during the "
-"campaign."
+"Select the campaign difficulty. This can be changed at any point during the "
+"campaign. However, the final score will be calculated based solely on the "
+"lowest difficulty of a completed scenario during the campaign."
 msgstr ""
-"Wybierz stopień trudności. Tego ustawienia nie będziesz mógł później zmienić."
 
 msgid "Restart the current scenario."
 msgstr "Rozpocznij od nowa obecny scenariusz."
@@ -5102,9 +5101,9 @@ msgstr ""
 "mapy"
 
 msgid ""
-"You have changed to a lower difficulty for the campaign. You will not be "
-"able to revert this after this point. The high score will be calculated "
-"based solely on the new difficulty. Do you want to proceed?"
+"You have changed the campaign difficulty. The final high score will be "
+"calculated based solely on the lowest difficulty level for a completed "
+"scenario during the campaign. Do you want to proceed?"
 msgstr ""
 
 msgid "Are you sure you want to restart this scenario?"
@@ -6583,11 +6582,14 @@ msgstr "Szybko"
 msgid "Very Fast"
 msgstr "Bardzo szybko"
 
-msgid "Evil"
-msgstr "Zły"
+msgid "Dynamic"
+msgstr ""
 
 msgid "Good"
 msgstr "Dobry"
+
+msgid "Evil"
+msgstr "Zły"
 
 msgid ", FPS: "
 msgstr ", FPS: "
@@ -12446,6 +12448,14 @@ msgstr ""
 "Możesz pobrać najnowszą wersję gry ze strony:\n"
 "https://github.com/ihhub/\n"
 "fheroes2/releases"
+
+#, fuzzy
+#~ msgid ""
+#~ "Select the campaign difficulty. This can be lowered at any point during "
+#~ "the campaign."
+#~ msgstr ""
+#~ "Wybierz stopień trudności. Tego ustawienia nie będziesz mógł później "
+#~ "zmienić."
 
 #~ msgid "Select count %{resource}:"
 #~ msgstr "Wybierz ilość %{resource}:"

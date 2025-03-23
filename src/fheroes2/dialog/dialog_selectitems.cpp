@@ -731,7 +731,7 @@ namespace Dialog
         setScrollBarImage( fheroes2::AGG::GetICN( listIcnId, 4 ) );
 
         // Render dialog buttons.
-        _window->renderOkayCancelButtons( _buttonOk, _buttonCancel, isEvilInterface );
+        _window->renderOkayCancelButtons( _buttonOk, _buttonCancel );
     }
 
     void ItemSelectionWindow::updateScrollBarImage()
@@ -1027,12 +1027,10 @@ int Dialog::selectHeroType( const int heroType )
     pos.x = area.x + area.width / 2;
     pos.y += 175;
 
-    const bool isEvilInterface = Settings::Get().isEvilInterfaceEnabled();
-
     // Render dialog buttons.
     fheroes2::Button buttonOk;
     fheroes2::Button buttonCancel;
-    background.renderOkayCancelButtons( buttonOk, buttonCancel, isEvilInterface );
+    background.renderOkayCancelButtons( buttonOk, buttonCancel );
 
     const auto & objectInfo = Maps::getObjectsByGroup( Maps::ObjectGroup::KINGDOM_HEROES );
     fheroes2::Rect heroRoi;
@@ -1258,22 +1256,27 @@ void Dialog::selectTownType( int & type, int & color )
     pos.x = area.x + area.width / 2;
     pos.y += 260;
 
-    const bool isEvilInterface = Settings::Get().isEvilInterfaceEnabled();
-
     // Render dialog buttons.
     fheroes2::Button buttonOk;
     fheroes2::Button buttonCancel;
-    background.renderOkayCancelButtons( buttonOk, buttonCancel, isEvilInterface );
+    background.renderOkayCancelButtons( buttonOk, buttonCancel );
 
-    const int32_t townButtonIcnId = isEvilInterface ? ICN::BUTTON_TOWN_EVIL : ICN::BUTTON_TOWN_GOOD;
-    const fheroes2::Sprite & townButtonImage = fheroes2::AGG::GetICN( townButtonIcnId, 0 );
-    fheroes2::Button buttonTown{ 0, 0, townButtonIcnId, 0, 1 };
-    fheroes2::Button buttonCastle{ 0, 0, isEvilInterface ? ICN::BUTTON_CASTLE_EVIL : ICN::BUTTON_CASTLE_GOOD, 0, 1 };
+    const bool isEvilInterface = Settings::Get().isEvilInterfaceEnabled();
 
-    const fheroes2::Point buttonOffset{ area.x + ( area.width - townButtonImage.width() ) / 2, area.y + area.height - townButtonImage.height() - 7 };
+    fheroes2::ButtonGroup castleTownButtons( { fheroes2::getSupportedText( gettext_noop( "TOWN" ), fheroes2::FontType::buttonReleasedWhite() ),
+                                               fheroes2::getSupportedText( gettext_noop( "CASTLE" ), fheroes2::FontType::buttonReleasedWhite() ) } );
+    fheroes2::ButtonBase & buttonTown = castleTownButtons.button( 0 );
+    fheroes2::ButtonBase & buttonCastle = castleTownButtons.button( 1 );
+
+    const int32_t buttonWidth = buttonTown.area().width;
+    const int32_t buttonHeight = buttonTown.area().height;
+
+    const fheroes2::Point buttonOffset{ area.x + ( area.width - buttonWidth ) / 2, area.y + area.height - buttonHeight - 7 };
+
     buttonTown.setPosition( buttonOffset.x, buttonOffset.y );
     buttonCastle.setPosition( buttonOffset.x, buttonOffset.y );
-    fheroes2::addGradientShadow( townButtonImage, display, buttonOffset, { -5, 5 } );
+    // We draw the shadow only once for both buttons because the button states overlap.
+    buttonTown.drawShadow( display );
 
     const fheroes2::Rect castleRoi{ pos.x - 2 * fheroes2::tileWidthPx - fheroes2::tileWidthPx / 2, pos.y - 4 * fheroes2::tileWidthPx + fheroes2::tileWidthPx / 2,
                                     5 * fheroes2::tileWidthPx, 5 * fheroes2::tileWidthPx };
@@ -1659,7 +1662,7 @@ void Dialog::selectMineType( int32_t & type, int32_t & color )
     // Render dialog buttons.
     fheroes2::Button buttonOk;
     fheroes2::Button buttonCancel;
-    background.renderOkayCancelButtons( buttonOk, buttonCancel, isEvilInterface );
+    background.renderOkayCancelButtons( buttonOk, buttonCancel );
 
     display.render( background.totalArea() );
 

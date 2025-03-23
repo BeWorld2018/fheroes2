@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fheroes2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-09 14:16+0000\n"
+"POT-Creation-Date: 2025-03-20 14:06+0000\n"
 "PO-Revision-Date: 2022-09-23 16:01+0200\n"
 "Last-Translator: fheroes2 team <fhomm2@gmail.com>\n"
 "Language-Team: \n"
@@ -19,54 +19,37 @@ msgstr ""
 "X-Generator: Poedit 3.2\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-msgid ""
-"NEW\n"
-"GAME"
-msgstr "НОВАЯ"
-
-msgid ""
-"SAVE\n"
-"GAME"
+msgid "SELECT"
 msgstr ""
-"ЗАХА-\n"
-"ВАЦЬ"
+
+msgid "S"
+msgstr ""
+
+msgid "M"
+msgstr ""
+
+msgid "L"
+msgstr ""
+
+msgid "X-L"
+msgstr ""
+
+msgid "ALL"
+msgstr "УСЕ"
+
+msgid "EXIT"
+msgstr "ВЫЙСЦІ"
+
+msgid "smallerButton|EXIT"
+msgstr ""
+
+msgid "HEROES"
+msgstr ""
 
 msgid ""
-"LOAD\n"
-"GAME"
+"TOWNS/\n"
+"CASTLES"
 msgstr ""
-"ЗАГРУ-\n"
-"ЗІЦЬ"
-
-msgid "INFO"
-msgstr "ДАВЕДКА"
-
-msgid "QUIT"
-msgstr ""
-"ЗАВЯР-\n"
-"ШЫЦЬ"
-
-#, fuzzy
-msgid ""
-"NEW\n"
-"MAP"
-msgstr "НОВАЯ"
-
-#, fuzzy
-msgid ""
-"SAVE\n"
-"MAP"
-msgstr ""
-"ЗАХА-\n"
-"ВАЦЬ"
-
-#, fuzzy
-msgid ""
-"LOAD\n"
-"MAP"
-msgstr ""
-"ЗАГРУ-\n"
-"ЗІЦЬ"
 
 msgid "CANCEL"
 msgstr "НАЗАД"
@@ -92,46 +75,111 @@ msgstr "ТАК"
 msgid "NO"
 msgstr "НЕ"
 
-msgid "EXIT"
-msgstr "ВЫЙСЦІ"
-
-msgid "smallerButton|EXIT"
-msgstr ""
-
 msgid "DISMISS"
 msgstr ""
 
 msgid "UPGRADE"
 msgstr "ПАЛЕПШЫЦЬ"
 
+msgid "GIFT"
+msgstr "АДДАЦЬ"
+
 msgid "RESTART"
 msgstr "НАНОВА"
 
-msgid "HEROES"
+msgid "MAX"
+msgstr "МАКС"
+
+msgid "MIN"
+msgstr "МІН"
+
+msgid ""
+"D\n"
+"I\n"
+"S\n"
+"M\n"
+"I\n"
+"S\n"
+"S"
 msgstr ""
 
 msgid ""
-"TOWNS/\n"
-"CASTLES"
+"E\n"
+"X\n"
+"I\n"
+"T"
 msgstr ""
 
-msgid "S"
+msgid ""
+"C\n"
+"A\n"
+"M\n"
+"P\n"
+"A\n"
+"I\n"
+"G\n"
+"N"
 msgstr ""
 
-msgid "M"
+msgid ""
+"S\n"
+"T\n"
+"A\n"
+"N\n"
+"D\n"
+"A\n"
+"R\n"
+"D"
 msgstr ""
 
-msgid "L"
-msgstr ""
+msgid ""
+"NEW\n"
+"GAME"
+msgstr "НОВАЯ"
 
-msgid "X-L"
+msgid ""
+"LOAD\n"
+"GAME"
 msgstr ""
+"ЗАГРУ-\n"
+"ЗІЦЬ"
 
-msgid "ALL"
-msgstr "УСЕ"
-
-msgid "SELECT"
+msgid ""
+"SAVE\n"
+"GAME"
 msgstr ""
+"ЗАХА-\n"
+"ВАЦЬ"
+
+msgid "QUIT"
+msgstr ""
+"ЗАВЯР-\n"
+"ШЫЦЬ"
+
+#, fuzzy
+msgid ""
+"LOAD\n"
+"MAP"
+msgstr ""
+"ЗАГРУ-\n"
+"ЗІЦЬ"
+
+#, fuzzy
+msgid ""
+"NEW\n"
+"MAP"
+msgstr "НОВАЯ"
+
+#, fuzzy
+msgid ""
+"SAVE\n"
+"MAP"
+msgstr ""
+"ЗАХА-\n"
+"ВАЦЬ"
+
+msgid "INFO"
+msgstr "ДАВЕДКА"
 
 msgid ""
 "STANDARD\n"
@@ -194,20 +242,11 @@ msgstr "5 ГУЛЬЦОЎ"
 msgid "6 PLAYERS"
 msgstr "6 ГУЛЬЦОЎ"
 
-msgid "GIFT"
-msgstr "АДДАЦЬ"
-
-msgid "MAX"
-msgstr "МАКС"
-
 msgid "DIFFICULTY"
 msgstr "ЦЯЖКАСЦЬ"
 
 msgid "VIEW INTRO"
 msgstr ""
-
-msgid "MIN"
-msgstr "МІН"
 
 msgid "RESET"
 msgstr ""
@@ -216,33 +255,6 @@ msgstr ""
 msgid "START"
 msgstr "НАНОВА"
 
-msgid "TOWN"
-msgstr ""
-
-msgid "CASTLE"
-msgstr ""
-
-#, fuzzy
-msgid "RESTRICT"
-msgstr "НАНОВА"
-
-msgid ""
-"D\n"
-"I\n"
-"S\n"
-"M\n"
-"I\n"
-"S\n"
-"S"
-msgstr ""
-
-msgid ""
-"E\n"
-"X\n"
-"I\n"
-"T"
-msgstr ""
-
 msgid ""
 "P\n"
 "A\n"
@@ -250,47 +262,6 @@ msgid ""
 "R\n"
 "O\n"
 "L"
-msgstr ""
-
-msgid ""
-"C\n"
-"A\n"
-"M\n"
-"P\n"
-"A\n"
-"I\n"
-"G\n"
-"N"
-msgstr ""
-
-msgid ""
-"S\n"
-"T\n"
-"A\n"
-"N\n"
-"D\n"
-"A\n"
-"R\n"
-"D"
-msgstr ""
-
-msgid "RUMORS"
-msgstr ""
-
-msgid "EVENTS"
-msgstr ""
-
-msgid "LANGUAGE"
-msgstr ""
-
-msgid ""
-"AUTO\n"
-"COMBAT"
-msgstr ""
-
-msgid ""
-"QUICK\n"
-"COMBAT"
 msgstr ""
 
 msgid "Warrior"
@@ -838,6 +809,16 @@ msgstr "Вы ўпэўненыя, што хочаце выйсці?"
 #, fuzzy
 msgid "Are you sure you want to resolve the battle in the quick combat mode?"
 msgstr "Вы ўпэўненыя, што хочаце выйсці?"
+
+msgid ""
+"AUTO\n"
+"COMBAT"
+msgstr ""
+
+msgid ""
+"QUICK\n"
+"COMBAT"
+msgstr ""
 
 msgid "The computer continues the combat for you."
 msgstr ""
@@ -3386,6 +3367,12 @@ msgstr "Наладкі замка"
 msgid "doubleLinedRace|Neutral"
 msgstr ""
 
+msgid "TOWN"
+msgstr ""
+
+msgid "CASTLE"
+msgstr ""
+
 #, fuzzy
 msgid "Click to start placing the selected castle/town."
 msgstr "Пстрыкні, каб ухваліць абранае раздзяленне."
@@ -3741,6 +3728,10 @@ msgstr "Воблачны замак"
 #, fuzzy
 msgid "Default Buildings"
 msgstr "Хобіты"
+
+#, fuzzy
+msgid "RESTRICT"
+msgstr "НАНОВА"
 
 msgid "Default Army"
 msgstr ""
@@ -4488,6 +4479,15 @@ msgstr "Складанасць мапы:"
 msgid "Map Description"
 msgstr "Апісанне"
 
+msgid "RUMORS"
+msgstr ""
+
+msgid "EVENTS"
+msgstr ""
+
+msgid "LANGUAGE"
+msgstr ""
+
 msgid ""
 "The entered map description exceeds the maximum allowed 5 rows. It will be "
 "shortened to fit the map description field."
@@ -4752,8 +4752,9 @@ msgid "View the intro video for the current state of the campaign."
 msgstr ""
 
 msgid ""
-"Select the campaign difficulty. This can be lowered at any point during the "
-"campaign."
+"Select the campaign difficulty. This can be changed at any point during the "
+"campaign. However, the final score will be calculated based solely on the "
+"lowest difficulty of a completed scenario during the campaign."
 msgstr ""
 
 msgid "Restart the current scenario."
@@ -4764,9 +4765,9 @@ msgid "Difficulty"
 msgstr "Складанасць"
 
 msgid ""
-"You have changed to a lower difficulty for the campaign. You will not be "
-"able to revert this after this point. The high score will be calculated "
-"based solely on the new difficulty. Do you want to proceed?"
+"You have changed the campaign difficulty. The final high score will be "
+"calculated based solely on the lowest difficulty level for a completed "
+"scenario during the campaign. Do you want to proceed?"
 msgstr ""
 
 msgid "Are you sure you want to restart this scenario?"
@@ -6161,10 +6162,13 @@ msgstr ""
 msgid "Very Fast"
 msgstr "Шпаркая"
 
-msgid "Evil"
+msgid "Dynamic"
 msgstr ""
 
 msgid "Good"
+msgstr ""
+
+msgid "Evil"
 msgstr ""
 
 msgid ", FPS: "
