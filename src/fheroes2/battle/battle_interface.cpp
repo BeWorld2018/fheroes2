@@ -113,8 +113,6 @@ namespace
 
     const int32_t battleLogElementWidth{ fheroes2::Display::DEFAULT_WIDTH - 32 - 16 };
 
-    const fheroes2::Point damageImageShadowOffset{ -5, 5 };
-
     struct LightningPoint
     {
         explicit LightningPoint( const fheroes2::Point & p = fheroes2::Point(), const int32_t thick = 1 )
@@ -1027,7 +1025,7 @@ void Battle::Status::setMessage( std::string messageString, const bool top )
     if ( top ) {
         _upperText.set( messageString, fheroes2::FontType::normalWhite() );
         // The text cannot go beyond the text area so it is important to truncate it when necessary.
-        _upperText.fitToOneRow( _upperBackground.width() - offsetForTextBar * 2 );
+        _upperText.fitToOneRow( width - offsetForTextBar * 2 );
 
         if ( _battleStatusLog ) {
             _battleStatusLog->AddMessage( std::move( messageString ) );
@@ -1036,7 +1034,7 @@ void Battle::Status::setMessage( std::string messageString, const bool top )
     else if ( messageString != _lastMessage ) {
         _lowerText.set( messageString, fheroes2::FontType::normalWhite() );
         // The text cannot go beyond the text area so it is important to truncate it when necessary.
-        _lowerText.fitToOneRow( _upperBackground.width() - offsetForTextBar * 2 );
+        _lowerText.fitToOneRow( width - offsetForTextBar * 2 );
 
         _lastMessage = std::move( messageString );
     }
@@ -1044,15 +1042,15 @@ void Battle::Status::setMessage( std::string messageString, const bool top )
 
 void Battle::Status::redraw( fheroes2::Image & output ) const
 {
-    fheroes2::Copy( _upperBackground, 0, 0, output, x, y, _upperBackground.width(), _upperBackground.height() );
-    fheroes2::Copy( _lowerBackground, 0, 0, output, x, y + _upperBackground.height(), _lowerBackground.width(), _lowerBackground.height() );
+    fheroes2::Copy( _upperBackground, 0, 0, output, x, y, width, _upperBackground.height() );
+    fheroes2::Copy( _lowerBackground, 0, 0, output, x, y + _upperBackground.height(), width, _lowerBackground.height() );
 
     if ( !_upperText.empty() ) {
-        _upperText.draw( x + ( _upperBackground.width() - _upperText.width() ) / 2, y + 4, output );
+        _upperText.draw( x + ( width - _upperText.width() ) / 2, y + 4, output );
     }
 
     if ( !_lowerText.empty() ) {
-        _lowerText.draw( x + ( _lowerBackground.width() - _lowerText.width() ) / 2, y + _upperBackground.height(), output );
+        _lowerText.draw( x + ( width - _lowerText.width() ) / 2, y + _upperBackground.height(), output );
     }
 }
 
@@ -1547,9 +1545,11 @@ void Battle::Interface::RedrawArmies()
 
             std::vector<const Unit *> troopBeforeWall;
             std::vector<const Unit *> troopAfterWall;
+            std::vector<const Unit *> upwardMovingTroopBeforeWall;
 
             std::vector<const Unit *> movingTroopBeforeWall;
             std::vector<const Unit *> movingTroopAfterWall;
+            std::vector<const Unit *> upwardMovingTroopAfterWall;
 
             // Overlay sprites for troops (i.e. spell effect animation) should be rendered after rendering all troops
             // for current row so the next troop will not be rendered over the overlay sprite.
@@ -1598,7 +1598,8 @@ void Battle::Interface::RedrawArmies()
                     }
                 }
 
-                const Unit * unitOnCell = Board::GetCell( cellId )->GetUnit();
+                const Cell * currentCell = Board::GetCell( cellId );
+                const Unit * unitOnCell = currentCell->GetUnit();
                 if ( unitOnCell == nullptr || _flyingUnit == unitOnCell || cellId == unitOnCell->GetTailIndex() ) {
                     continue;
                 }
@@ -1622,10 +1623,22 @@ void Battle::Interface::RedrawArmies()
                 }
                 else {
                     if ( isCellBefore ) {
-                        movingTroopBeforeWall.emplace_back( unitOnCell );
+                        if ( _movingPos.y < currentCell->GetPos().y ) {
+                            // The troop is moving to the upper row. We should render it prior to this row units.
+                            upwardMovingTroopBeforeWall.emplace_back( unitOnCell );
+                        }
+                        else {
+                            movingTroopBeforeWall.emplace_back( unitOnCell );
+                        }
                     }
                     else {
-                        movingTroopAfterWall.emplace_back( unitOnCell );
+                        if ( _movingPos.y < currentCell->GetPos().y ) {
+                            // The troop is moving to the upper row. We should render it prior to this row units.
+                            upwardMovingTroopAfterWall.emplace_back( unitOnCell );
+                        }
+                        else {
+                            movingTroopAfterWall.emplace_back( unitOnCell );
+                        }
                     }
                 }
 
@@ -1643,6 +1656,10 @@ void Battle::Interface::RedrawArmies()
             }
 
             for ( const Unit * unit : deadTroopBeforeWall ) {
+                RedrawTroopSprite( *unit );
+            }
+
+            for ( const Unit * unit : upwardMovingTroopBeforeWall ) {
                 RedrawTroopSprite( *unit );
             }
 
@@ -1671,6 +1688,10 @@ void Battle::Interface::RedrawArmies()
                 RedrawTroopSprite( *unit );
             }
 
+            for ( const Unit * unit : upwardMovingTroopAfterWall ) {
+                RedrawTroopSprite( *unit );
+            }
+
             for ( const Unit * unit : troopAfterWall ) {
                 RedrawTroopSprite( *unit );
             }
@@ -1696,7 +1717,6 @@ void Battle::Interface::RedrawArmies()
             std::vector<const Unit *> movingTroop;
             std::vector<const UnitSpellEffectInfo *> troopOverlaySprite;
 
-            // Redraw monsters.
             for ( int32_t cellColumnId = 0; cellColumnId < Board::widthInCells; ++cellColumnId ) {
                 const int32_t cellId = cellRowId * Board::widthInCells + cellColumnId;
 
@@ -1709,7 +1729,8 @@ void Battle::Interface::RedrawArmies()
                     }
                 }
 
-                const Unit * unitOnCell = Board::GetCell( cellId )->GetUnit();
+                const Cell * currentCell = Board::GetCell( cellId );
+                const Unit * unitOnCell = currentCell->GetUnit();
                 if ( unitOnCell == nullptr || _flyingUnit == unitOnCell || cellId == unitOnCell->GetTailIndex() ) {
                     continue;
                 }
@@ -1723,6 +1744,10 @@ void Battle::Interface::RedrawArmies()
 
                     troop.emplace_back( unitOnCell );
                 }
+                else if ( _movingPos.y < currentCell->GetPos().y ) {
+                    // The troop is moving to the upper row. Render it prior to this row units.
+                    RedrawTroopSprite( *unitOnCell );
+                }
                 else {
                     movingTroop.emplace_back( unitOnCell );
                 }
@@ -1735,11 +1760,12 @@ void Battle::Interface::RedrawArmies()
                 }
             }
 
-            // Redraw monster counters.
+            // Redraw monsters.
             for ( const Unit * unit : troop ) {
                 RedrawTroopSprite( *unit );
             }
 
+            // Redraw monster counters.
             for ( const Unit * unit : troopCounter ) {
                 RedrawTroopCount( *unit );
             }
@@ -3224,18 +3250,11 @@ void Battle::Interface::EventShowOptions()
 
 bool Battle::Interface::EventStartAutoCombat( const Unit & unit, Actions & actions )
 {
-    // TODO: remove these temporary assertions
-    assert( arena.CanToggleAutoCombat() );
-    assert( !arena.AutoCombatInProgress() );
-
     if ( fheroes2::showStandardTextMessage( {}, _( "Are you sure you want to enable the auto combat mode?" ), Dialog::YES | Dialog::NO ) != Dialog::YES ) {
         return false;
     }
 
-    actions.emplace_back( Command::TOGGLE_AUTO_COMBAT, unit.GetCurrentOrArmyColor() );
-
-    humanturn_redraw = true;
-    humanturn_exit = true;
+    _startAutoCombat( unit, actions );
 
     return true;
 }
@@ -3247,12 +3266,28 @@ bool Battle::Interface::EventQuickCombat( Actions & actions )
         return false;
     }
 
+    _quickCombat( actions );
+
+    return true;
+}
+
+void Battle::Interface::_startAutoCombat( const Unit & unit, Actions & actions )
+{
+    // TODO: remove this temporary assertion
+    assert( arena.CanToggleAutoCombat() && !arena.AutoCombatInProgress() );
+
+    actions.emplace_back( Command::TOGGLE_AUTO_COMBAT, unit.GetCurrentOrArmyColor() );
+
+    humanturn_redraw = true;
+    humanturn_exit = true;
+}
+
+void Battle::Interface::_quickCombat( Actions & actions )
+{
     actions.emplace_back( Command::QUICK_COMBAT );
 
     humanturn_redraw = true;
     humanturn_exit = true;
-
-    return true;
 }
 
 void Battle::Interface::OpenAutoModeDialog( const Unit & unit, Actions & actions )
@@ -3296,11 +3331,12 @@ void Battle::Interface::OpenAutoModeDialog( const Unit & unit, Actions & actions
         if ( le.MouseClickLeft( buttonCancel.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::DEFAULT_CANCEL ) ) {
             return;
         }
-        if ( ( le.MouseClickLeft( autoCombatButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_TOGGLE_AUTO_COMBAT ) )
-             && EventStartAutoCombat( unit, actions ) ) {
+        if ( le.MouseClickLeft( autoCombatButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_TOGGLE_AUTO_COMBAT ) ) {
+            _startAutoCombat( unit, actions );
             return;
         }
-        if ( ( le.MouseClickLeft( quickCombatButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_QUICK_COMBAT ) ) && EventQuickCombat( actions ) ) {
+        if ( le.MouseClickLeft( quickCombatButton.area() ) || Game::HotKeyPressEvent( Game::HotKeyEvent::BATTLE_QUICK_COMBAT ) ) {
+            _quickCombat( actions );
             return;
         }
 
@@ -6773,32 +6809,24 @@ void Battle::PopupDamageInfo::_makeDamageImage()
 
     const fheroes2::Rect & unitRect = _defender->GetRectPosition();
 
-    const int32_t shadowOffsetX = std::abs( damageImageShadowOffset.x );
-    const int32_t shadowOffsetY = std::abs( damageImageShadowOffset.y );
     // Get the border width and set the popup parameters.
     const int32_t borderWidth = BorderWidth();
     const int32_t x = _battleUIRect.x + unitRect.x + unitRect.width;
     const int32_t y = _battleUIRect.y + unitRect.y;
-    const int32_t w = std::max( damageText.width(), killedText.width() ) + 2 * borderWidth + shadowOffsetX;
-    const int32_t h = damageText.height() + killedText.height() + 2 * borderWidth + shadowOffsetY;
+    const int32_t w = std::max( damageText.width(), killedText.width() ) + 2 * borderWidth;
+    const int32_t h = damageText.height() + killedText.height() + 2 * borderWidth;
 
     // If the damage info popup doesn't fit the battlefield draw surface, then try to place it on the left side of the cell
     const bool isLeftSidePopup = ( unitRect.x + unitRect.width + w ) > _battleUIRect.width;
     const fheroes2::Rect borderRect( isLeftSidePopup ? ( x - w - unitRect.width - borderWidth ) : x, y, w, h );
-    _damageImage.resize( borderRect.width, borderRect.height );
-    _damageImage.reset();
 
-    const fheroes2::Sprite & backgroundIcn = fheroes2::AGG::GetICN( ICN::CELLWIN, 1 );
-    fheroes2::Image backgroundImage
-        = fheroes2::Stretch( backgroundIcn, 0, 0, backgroundIcn.width(), backgroundIcn.height(), borderRect.width - shadowOffsetX, borderRect.height - shadowOffsetY );
-    damageText.draw( borderWidth, borderWidth + 2, backgroundImage );
-    killedText.draw( borderWidth, ( borderRect.height - shadowOffsetY ) / 2 + 2, backgroundImage );
-
-    fheroes2::Copy( backgroundImage, 0, 0, _damageImage, shadowOffsetX, 0, borderRect.width - shadowOffsetX, borderRect.height - shadowOffsetY );
-
+    const fheroes2::Sprite & backgroundImage = fheroes2::AGG::GetICN( ICN::CELLWIN, 1 );
+    _damageImage = fheroes2::Stretch( backgroundImage, 0, 0, backgroundImage.width(), backgroundImage.height(), borderRect.width, borderRect.height );
     _damageImage.setPosition( borderRect.x, borderRect.y );
+    _damageImage._disableTransformLayer();
 
-    fheroes2::addGradientShadow( backgroundImage, _damageImage, { shadowOffsetX, 0 }, damageImageShadowOffset );
+    damageText.draw( borderWidth, borderWidth + 2, _damageImage );
+    killedText.draw( borderWidth, borderRect.height / 2 + 2, _damageImage );
 }
 
 void Battle::PopupDamageInfo::redraw() const
@@ -6809,5 +6837,8 @@ void Battle::PopupDamageInfo::redraw() const
 
     assert( !_damageImage.empty() );
 
-    fheroes2::Blit( _damageImage, 0, 0, fheroes2::Display::instance(), _damageImage.x(), _damageImage.y(), _damageImage.width(), _damageImage.height() );
+    fheroes2::Display & display = fheroes2::Display::instance();
+
+    fheroes2::Copy( _damageImage, 0, 0, display, _damageImage.x(), _damageImage.y(), _damageImage.width(), _damageImage.height() );
+    fheroes2::addGradientShadowForArea( display, { _damageImage.x(), _damageImage.y() }, _damageImage.width(), _damageImage.height(), 5 );
 }

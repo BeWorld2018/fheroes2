@@ -138,6 +138,8 @@ namespace
                                                 ICN::BUTTON_5_PLAYERS,
                                                 ICN::BUTTON_6_PLAYERS,
                                                 ICN::BUTTON_BATTLE_ONLY,
+                                                ICN::BUTTON_NEW_MAP,
+                                                ICN::BUTTON_LOAD_MAP,
                                                 ICN::BUTTON_GIFT_GOOD,
                                                 ICN::BUTTON_GIFT_EVIL,
                                                 ICN::UNIFORM_EVIL_MAX_BUTTON,
@@ -1419,6 +1421,8 @@ namespace
         case ICN::BUTTON_5_PLAYERS:
         case ICN::BUTTON_6_PLAYERS:
         case ICN::BUTTON_BATTLE_ONLY:
+        case ICN::BUTTON_NEW_MAP:
+        case ICN::BUTTON_LOAD_MAP:
         case ICN::BUTTON_CAMPAIGN_GAME:
         case ICN::BUTTON_EXPANSION_CAMPAIGN:
         case ICN::BUTTON_HOT_SEAT:
@@ -1491,6 +1495,16 @@ namespace
                 case ICN::BUTTON_6_PLAYERS: {
                     buttonIcnID = ICN::BTNHOTST;
                     icnIndex = { 8, 9 };
+                    break;
+                }
+                case ICN::BUTTON_NEW_MAP: {
+                    buttonIcnID = ICN::BTNEMAIN;
+                    icnIndex = { 0, 1 };
+                    break;
+                }
+                case ICN::BUTTON_LOAD_MAP: {
+                    buttonIcnID = ICN::BTNEMAIN;
+                    icnIndex = { 2, 3 };
                     break;
                 }
                 default:
@@ -1567,6 +1581,14 @@ namespace
             }
             case ICN::BUTTON_6_PLAYERS: {
                 text = gettext_noop( "6 PLAYERS" );
+                break;
+            }
+            case ICN::BUTTON_NEW_MAP: {
+                text = gettext_noop( "NEW\nMAP" );
+                break;
+            }
+            case ICN::BUTTON_LOAD_MAP: {
+                text = gettext_noop( "LOAD\nMAP" );
                 break;
             }
             default:
@@ -2999,6 +3021,16 @@ namespace
 
                 // Make erase Streams button image.
                 Blit( fheroes2::AGG::GetICN( ICN::STREAM, 2 ), 0, 0, _icnVsSprite[id][17], 1, 8, 24, 11 );
+            }
+            return true;
+        case ICN::TEXTBAR:
+            LoadOriginalICN( id );
+            if ( _icnVsSprite[id].size() > 9 ) {
+                // Remove the slightly corrupted rightmost column from the text bar background image.
+                for ( size_t i = 8; i < 10; ++i )
+                    if ( _icnVsSprite[id][i].width() == 543 ) {
+                        _icnVsSprite[id][i] = Crop( _icnVsSprite[id][i], 0, 0, _icnVsSprite[id][i].width() - 1, _icnVsSprite[id][i].height() );
+                    }
             }
             return true;
         case ICN::TWNWUP_5:
@@ -4506,7 +4538,7 @@ namespace
             }
 
             _icnVsSprite[id].resize( 2 );
-            // move dark border to new released state from original pressed state button
+            // Move dark border to new released state from original pressed state button
             const fheroes2::Sprite & originalReleased = fheroes2::AGG::GetICN( originalID, 4 );
             const fheroes2::Sprite & originalPressed = fheroes2::AGG::GetICN( originalID, 5 );
             if ( originalReleased.width() != 94 && originalPressed.width() != 94 && originalReleased.height() < 5 && originalPressed.height() < 5 ) {
@@ -4523,15 +4555,21 @@ namespace
             Copy( originalPressed, 0, originalPressed.height() - 1, releasedWithDarkBorder, 0, originalPressed.height(), originalPressed.width(), 1 );
             Copy( originalPressed, 0, 2, releasedWithDarkBorder, 1, 22, 1, 1 );
 
-            // pressed state
+            // Pressed state
             fheroes2::Sprite & pressed = _icnVsSprite[id][1];
-            pressed.resize( originalPressed.width() + 2, originalPressed.height() + 1 );
+            // Make sure the released and pressed states have the same size, because the original Czech's pressed state is 1 px less in height than the other versions'.
+            pressed.resize( originalReleased.width() + 2, originalReleased.height() + 1 );
             pressed.reset();
             Copy( originalPressed, 0, 0, pressed, 0, 1, originalPressed.width(), originalPressed.height() );
 
-            // the empty buttons need to be widened by 1 px so that they can be evenly divided by 3 in resizeButton() in ui_tools.cpp
+            // This fills the 1 px vertical gap in the Czech pressed state button.
+            if ( originalPressed.height() < 23 ) {
+                Copy( originalPressed, 0, originalPressed.height() - 10, pressed, 0, pressed.height() - 10, originalPressed.width(), 10 );
+            }
+
+            // The empty buttons need to be widened by 1 px so that they can be evenly divided by 3 in resizeButton() in ui_tools.cpp.
             Copy( originalReleased, originalReleased.width() - 5, 0, releasedWithDarkBorder, releasedWithDarkBorder.width() - 5, 0, 5, originalReleased.height() );
-            Copy( originalPressed, originalPressed.width() - 5, 0, pressed, pressed.width() - 6, 1, 5, originalPressed.height() );
+            Copy( originalPressed, originalPressed.width() - 5, 0, pressed, pressed.width() - 6, 1, 5, originalReleased.height() );
 
             const int32_t pixelPosition = 4 * 94 + 6;
             Fill( releasedWithDarkBorder, 5, 3, 88, 18, originalReleased.image()[pixelPosition] );
