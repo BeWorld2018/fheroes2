@@ -125,7 +125,7 @@ namespace
         {
             const fheroes2::Sprite & port = Heroes::GetPortrait( index, PORT_SMALL );
 
-            renderItem( port, Heroes::GetName( index ), { dstx, dsty }, 45 / 2, 50, _offsetY / 2, current );
+            renderItem( port, Heroes::getDefaultName( index ), { dstx, dsty }, 45 / 2, 50, _offsetY / 2, current );
         }
 
         void ActionListPressRight( int & index ) override
@@ -295,7 +295,7 @@ namespace
             if ( imageHeight > fheroes2::tileWidthPx * 3 || imageWidth > fheroes2::tileWidthPx * 5 ) {
                 // Reduce the size of very tall images to fit the list.
                 const double ratio = std::max( imageHeight / ( fheroes2::tileWidthPx * 3. ), imageWidth / ( fheroes2::tileWidthPx * 5. ) );
-                fheroes2::Image resized( static_cast<int32_t>( imageWidth / ratio ), static_cast<int32_t>( imageHeight / ratio ) );
+                fheroes2::Sprite resized( static_cast<int32_t>( imageWidth / ratio ), static_cast<int32_t>( imageHeight / ratio ) );
                 fheroes2::Resize( image, resized );
                 renderItem( resized, getObjectName( _objectInfo[objectId] ), { posX, posY }, _imageOffsetX, _textOffsetX, _offsetY / 2, isSelected );
             }
