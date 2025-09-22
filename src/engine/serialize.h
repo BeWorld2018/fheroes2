@@ -117,10 +117,6 @@
 
 #include "math_base.h"
 
-#ifdef __MORPHOS__
-#undef tell
-#endif
-
 #define IS_BIGENDIAN ( BYTE_ORDER == BIG_ENDIAN )
 
 // Base class for all I/O facilities

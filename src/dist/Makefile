@@ -112,7 +112,7 @@ ifdef FHEROES2_WITH_SYSTEM_SMACKER
 LIBS := $(LIBS) -lsmacker
 endif
 
-ifeq ($(PLATFORM),morphos)
+ifeq ($(PLATFORM),MorphOS)
 LIBS := $(LIBS) -lz_shared $(LDLIBS)
 else
 LIBS := $(LIBS) -lz $(LDLIBS)
@@ -154,7 +154,8 @@ endif
 
 # SDL_LIBS can already be defined in a platform-specific Makefile
 ifeq ($(origin SDL_LIBS),undefined)
-SDL_LIBS := -lSDL2_mixer $(shell sdl2-config --libs)
+SDL_LIBS := -lSDL2_mixerX_light_shared -lfluidsynth_full -lsndfile -lFLAC -lopusfile -lopus -lvorbisenc -lvorbisfile -lvorbis  -logg  $(shell sdl2-config --libs)
+
 
 ifdef FHEROES2_WITH_IMAGE
 SDL_LIBS := $(SDL_LIBS) -lSDL2_image $(shell libpng-config --libs)
