@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2023 - 2025                                             *
+ *   Copyright (C) 2023 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -221,9 +221,17 @@ namespace Interface
     fheroes2::Rect EditorPanel::getBrushArea() const
     {
         // Roads and streams are placed using only 1x1 brush.
-        if ( _selectedInstrument == Instrument::STREAM || _selectedInstrument == Instrument::ROAD || _selectedInstrument == Instrument::DETAIL
-             || _selectedInstrument == Instrument::MONSTERS ) {
+        if ( _selectedInstrument == Instrument::STREAM || _selectedInstrument == Instrument::ROAD || _selectedInstrument == Instrument::DETAIL ) {
             return { 0, 0, 1, 1 };
+        }
+
+        if ( _selectedInstrument == Instrument::MONSTERS ) {
+            const int32_t objectType = getSelectedObjectType();
+            if ( objectType >= 0 ) {
+                return { 0, 0, 1, 1 };
+            }
+
+            return {};
         }
 
         if ( _selectedInstrument == Instrument::LANDSCAPE_OBJECTS || _selectedInstrument == Instrument::ADVENTURE_OBJECTS
@@ -369,7 +377,7 @@ namespace Interface
 
         // Brush size buttons position. Shown on the terrain and erasure instrument panels.
         offsetX = displayX + 14;
-        int32_t offsetY = displayY + std::min( instrumentPanelHeight - 27, 135 );
+        int32_t offsetY = displayY + std::min<int32_t>( instrumentPanelHeight - 27, 135 );
         for ( size_t i = 0; i < _brushSizeButtonsRect.size(); ++i ) {
             _brushSizeButtons[i].setPosition( offsetX, offsetY );
             _brushSizeButtonsRect[i] = _brushSizeButtons[i].area();

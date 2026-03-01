@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2022 - 2025                                             *
+ *   Copyright (C) 2022 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -44,7 +44,6 @@
 #include "ui_button.h"
 #include "ui_constants.h"
 #include "ui_dialog.h"
-#include "ui_scrollbar.h"
 #include "ui_text.h"
 #include "ui_window.h"
 
@@ -74,7 +73,7 @@ namespace
             text.add( fheroes2::Text{ _( "Hotkey: " ), fheroes2::FontType::normalYellow() } );
             text.add( fheroes2::Text{ StringUpper( KeySymGetName( _key ) ), fheroes2::FontType::normalWhite() } );
 
-            _restorer.update( offset.x, offset.y, fheroes2::boxAreaWidthPx, text.height() );
+            _restorer.update( offset.x, offset.y, fheroes2::boxAreaWidthPx, text.height( fheroes2::boxAreaWidthPx ) );
 
             text.draw( offset.x, offset.y, fheroes2::boxAreaWidthPx, output );
         }
@@ -230,15 +229,6 @@ namespace
             _listBackground = std::make_unique<fheroes2::ImageRestorer>( fheroes2::Display::instance(), roi.x, roi.y, roi.width, roi.height );
         }
 
-        void updateScrollBarImage()
-        {
-            const int32_t scrollBarWidth = _scrollbar.width();
-
-            setScrollBarImage( fheroes2::generateScrollbarSlider( _scrollbar, false, _scrollbar.getArea().height, VisibleItemCount(), _size(),
-                                                                  { 0, 0, scrollBarWidth, 8 }, { 0, 7, scrollBarWidth, 8 } ) );
-            _scrollbar.moveToIndex( _topId );
-        }
-
     private:
         std::unique_ptr<fheroes2::ImageRestorer> _listBackground;
     };
@@ -254,7 +244,7 @@ namespace fheroes2
         fheroes2::Display & display = fheroes2::Display::instance();
 
         // Dialog height is capped with the current screen height minus 100 pixels.
-        fheroes2::StandardWindow background( keyDescriptionLength + hotKeyLength + 8 + 75, std::min( display.height() - 100, 520 ), true, display );
+        fheroes2::StandardWindow background( keyDescriptionLength + hotKeyLength + 8 + 75, std::min<int32_t>( display.height() - 100, 520 ), true, display );
 
         const fheroes2::Rect roi( background.activeArea() );
         const fheroes2::Rect listRoi( roi.x + 24, roi.y + 37, keyDescriptionLength + hotKeyLength + 8, roi.height - 75 );

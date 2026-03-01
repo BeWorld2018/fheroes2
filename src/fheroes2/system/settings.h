@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2019 - 2025                                             *
+ *   Copyright (C) 2019 - 2026                                             *
  *                                                                         *
  *   Free Heroes2 Engine: http://sourceforge.net/projects/fheroes2         *
  *   Copyright (C) 2009 by Andrey Afletdinov <fheroes2@gmail.com>          *
@@ -204,7 +204,10 @@ public:
     bool isAutoSaveAtBeginningOfTurnEnabled() const;
     bool isBattleShowDamageInfoEnabled() const;
     bool isHideInterfaceEnabled() const;
+    bool isArmyEstimationViewNumeric() const;
+    bool isScreenScalingTypeNearest() const;
     bool isEvilInterfaceEnabled() const;
+    bool isBattleMovementAreaHighlightEnabled() const;
 
     void setInterfaceType( InterfaceType type )
     {
@@ -215,6 +218,8 @@ public:
     {
         return _interfaceType;
     }
+
+    void switchToNextInterfaceType();
 
     bool isEditorAnimationEnabled() const;
     bool isEditorPassabilityEnabled() const;
@@ -287,7 +292,9 @@ public:
     void setAutoSaveAtBeginningOfTurn( const bool enable );
     void setBattleDamageInfo( const bool enable );
     void setHideInterface( const bool enable );
+    void setNumericArmyEstimationView( const bool enable );
     void setScreenScalingTypeNearest( const bool enable );
+    void setHighlightBattleMovementArea( const bool enable );
 
     void SetSoundVolume( int v );
     void SetMusicVolume( int v );
@@ -407,7 +414,7 @@ private:
     fheroes2::ResolutionInfo _resolutionInfo;
     fheroes2::Point _windowPos;
 
-    int _gameDifficulty;
+    int32_t _gameDifficulty;
 
     std::string _programPath;
 
@@ -428,7 +435,7 @@ private:
     int scroll_speed;
     int battle_speed;
 
-    int game_type;
+    int32_t game_type;
     ZoomLevel _viewWorldZoomLevel{ ZoomLevel::ZoomLevel1 };
     InterfaceType _interfaceType{ InterfaceType::GOOD };
 

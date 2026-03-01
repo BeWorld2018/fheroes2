@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2023 - 2025                                             *
+ *   Copyright (C) 2023 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -118,7 +118,7 @@ namespace
         EndOfText
     };
 
-    class KeyboardRenderer
+    class KeyboardRenderer final
     {
     public:
         KeyboardRenderer( fheroes2::Display & output, std::string & info, const size_t lengthLimit, const bool evilInterface )
@@ -326,7 +326,7 @@ namespace
         }
     };
 
-    struct KeyboardButton
+    struct KeyboardButton final
     {
         KeyboardButton() = default;
 
@@ -344,7 +344,8 @@ namespace
             // Make Image with shadow for button to Blit it during render.
             buttonShadow.resize( released.width() + std::abs( buttonShadowOffset.x ), released.height() + std::abs( buttonShadowOffset.y ) );
             buttonShadow.reset();
-            fheroes2::addGradientShadow( released, buttonShadow, { -std::min( 0, buttonShadowOffset.x ), -std::min( 0, buttonShadowOffset.y ) }, buttonShadowOffset );
+            fheroes2::addGradientShadow( released, buttonShadow, { -std::min<int32_t>( 0, buttonShadowOffset.x ), -std::min<int32_t>( 0, buttonShadowOffset.y ) },
+                                         buttonShadowOffset );
         }
 
         KeyboardButton( std::string input, const fheroes2::Size & buttonSize, const bool isEvilInterface, std::function<DialogAction( KeyboardRenderer & )> actionEvent )
@@ -599,7 +600,7 @@ namespace
             lastButtonRow.emplace_back( _( "Keyboard|123" ), defaultSpecialButtonSize, isEvilInterface,
                                         []( const KeyboardRenderer & ) { return DialogAction::AlphaNumeric; } );
 
-            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), fheroes2::Key::KEY_SPACE, spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.insertCharacter( ' ' );
                 return DialogAction::DoNothing;
             } );
@@ -609,7 +610,7 @@ namespace
                 lastButtonRow.back().button.hide();
             }
 
-            lastButtonRow.emplace_back( "~", defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( "~", fheroes2::Key::KEY_BACKSPACE, defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.removeCharacter();
                 return DialogAction::DoNothing;
             } );
@@ -621,7 +622,7 @@ namespace
             lastButtonRow.emplace_back( _( "Keyboard|123" ), defaultSpecialButtonSize, isEvilInterface,
                                         []( const KeyboardRenderer & ) { return DialogAction::AlphaNumeric; } );
 
-            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), fheroes2::Key::KEY_SPACE, spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.insertCharacter( ' ' );
                 return DialogAction::DoNothing;
             } );
@@ -631,7 +632,7 @@ namespace
                 lastButtonRow.back().button.hide();
             }
 
-            lastButtonRow.emplace_back( "~", defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( "~", fheroes2::Key::KEY_BACKSPACE, defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.removeCharacter();
                 return DialogAction::DoNothing;
             } );
@@ -643,7 +644,7 @@ namespace
             lastButtonRow.emplace_back( _( "Keyboard|ABC" ), defaultSpecialButtonSize, isEvilInterface,
                                         []( const KeyboardRenderer & ) { return DialogAction::LowerCase; } );
 
-            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( _( "Keyboard|SPACE" ), fheroes2::Key::KEY_SPACE, spacebarButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.insertCharacter( ' ' );
                 return DialogAction::DoNothing;
             } );
@@ -651,7 +652,7 @@ namespace
             lastButtonRow.emplace_back( "\x7F", defaultSpecialButtonSize, isEvilInterface, []( const KeyboardRenderer & ) { return DialogAction::DoNothing; } );
             lastButtonRow.back().button.hide();
 
-            lastButtonRow.emplace_back( "~", defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
+            lastButtonRow.emplace_back( "~", fheroes2::Key::KEY_BACKSPACE, defaultSpecialButtonSize, isEvilInterface, []( KeyboardRenderer & renderer ) {
                 renderer.removeCharacter();
                 return DialogAction::DoNothing;
             } );
@@ -774,8 +775,8 @@ namespace
         const int32_t yOffset = offset.y + static_cast<int32_t>( buttonRows * defaultButtonHeight + ( buttonRows - 1 ) * buttonOffset * 2 );
 
         // Take button shadow offset into account.
-        roi.x += std::min( 0, buttonShadowOffset.x );
-        roi.y += std::min( 0, buttonShadowOffset.y );
+        roi.x += std::min<int32_t>( 0, buttonShadowOffset.x );
+        roi.y += std::min<int32_t>( 0, buttonShadowOffset.y );
         roi.width += std::abs( buttonShadowOffset.x );
         roi.height = yOffset - roi.y + std::abs( buttonShadowOffset.y );
 
@@ -894,6 +895,18 @@ namespace
                     assert( buttonInfo.action );
 
                     return buttonInfo.action( renderer );
+                }
+
+                if ( le.MouseLongPressLeft( buttonInfo.button.area() ) ) {
+                    assert( buttonInfo.action );
+
+                    const auto actionType = buttonInfo.action( renderer );
+                    if ( actionType == DialogAction::DoNothing ) {
+                        // Only for the event of entering a character.
+                        le.resetLongPress();
+                    }
+
+                    return actionType;
                 }
             }
         }

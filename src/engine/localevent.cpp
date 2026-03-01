@@ -379,6 +379,9 @@ namespace EventProcessing
                 return;
             }
 
+            // On devices with touchpad/touchscreen the software-rendered mouse cursor is mandatory
+            // to properly convert touch events to mouse events and render the cursor especially
+            // if no hardware mouse device is present and the hardware cursor is disabled by OS.
             fheroes2::cursor().enableSoftwareEmulation( true );
         }
 
@@ -394,6 +397,8 @@ namespace EventProcessing
                 if ( SDL_IsGameController( i ) == SDL_TRUE ) {
                     _gameController = SDL_GameControllerOpen( i );
                     if ( _gameController != nullptr ) {
+                        // We force enable the software-rendered mouse cursor to properly convert controller events to mouse events
+                        // and render the cursor especially if no hardware mouse device is present and the hardware cursor is disabled by OS.
                         fheroes2::cursor().enableSoftwareEmulation( true );
                         break;
                     }
@@ -549,6 +554,14 @@ namespace EventProcessing
 
         static const char * getKeyName( const fheroes2::Key key )
         {
+            if ( key == fheroes2::Key::KEY_MOUSE_BUTTON_BACKWARD ) {
+                return "Mouse Backward";
+            }
+
+            if ( key == fheroes2::Key::KEY_MOUSE_BUTTON_FORWARD ) {
+                return "Mouse Forward";
+            }
+
             return SDL_GetKeyName( static_cast<SDL_Keycode>( getSDLKey( key ) ) );
         }
 
@@ -818,6 +831,10 @@ namespace EventProcessing
                 return SDLK_HOME;
             case fheroes2::Key::KEY_END:
                 return SDLK_END;
+            case fheroes2::Key::KEY_MOUSE_BUTTON_BACKWARD:
+                return SDL_BUTTON_X1;
+            case fheroes2::Key::KEY_MOUSE_BUTTON_FORWARD:
+                return SDL_BUTTON_X2;
             default:
                 // Did you add a new key? Add the logic above!
                 assert( 0 );
@@ -839,7 +856,10 @@ namespace EventProcessing
                 // The map is empty let's populate it.
                 for ( int32_t i = static_cast<int32_t>( fheroes2::Key::NONE ); i < static_cast<int32_t>( fheroes2::Key::LAST_KEY ); ++i ) {
                     const fheroes2::Key key = static_cast<fheroes2::Key>( i );
-                    sdlValueToKey.emplace( getSDLKey( key ), key );
+                    const auto [dummy, isEmplaced] = sdlValueToKey.try_emplace( getSDLKey( key ), key );
+                    if ( !isEmplaced ) {
+                        assert( 0 );
+                    }
                 }
             }
 
@@ -888,6 +908,16 @@ namespace EventProcessing
             case SDL_BUTTON_RIGHT:
                 buttonType = LocalEvent::MouseButtonType::MOUSE_BUTTON_RIGHT;
                 break;
+            case SDL_BUTTON_X1:
+                // We treat the Backward mouse button as a normal keyboard button to allow to use it for hot-key mapping.
+                eventHandler.onKeyboardEvent( fheroes2::Key::KEY_MOUSE_BUTTON_BACKWARD, 0,
+                                              ( button.state == SDL_PRESSED ) ? LocalEvent::KeyboardEventState::KEY_DOWN : LocalEvent::KeyboardEventState::KEY_UP );
+                return;
+            case SDL_BUTTON_X2:
+                // We treat the Forward mouse button as a normal keyboard button to allow to use it for hot-key mapping.
+                eventHandler.onKeyboardEvent( fheroes2::Key::KEY_MOUSE_BUTTON_FORWARD, 0,
+                                              ( button.state == SDL_PRESSED ) ? LocalEvent::KeyboardEventState::KEY_DOWN : LocalEvent::KeyboardEventState::KEY_UP );
+                return;
             default:
                 VERBOSE_LOG( "Unknown mouse button " << static_cast<int>( button.button ) )
                 return;
@@ -1027,6 +1057,15 @@ namespace EventProcessing
             else if ( buttonType == LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_START ) {
                 buttonType = LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_Y;
             }
+            else if ( buttonType == LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_GUIDE ) {
+                buttonType = LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_BACK;
+            }
+            else if ( buttonType == LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_DPAD_LEFT ) {
+                buttonType = LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_LEFT_SHOULDER;
+            }
+            else if ( buttonType == LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_DPAD_RIGHT ) {
+                buttonType = LocalEvent::ControllerButtonType::CONTROLLER_BUTTON_RIGHT_SHOULDER;
+            }
 #endif
 
             eventHandler.onControllerButtonEvent( button.state == SDL_PRESSED, buttonType );
@@ -1104,6 +1143,8 @@ namespace EventProcessing
             if ( _gameController == nullptr ) {
                 _gameController = SDL_GameControllerOpen( event.which );
                 if ( _gameController != nullptr ) {
+                    // We force enable the software-rendered mouse cursor to properly convert controller events to mouse events
+                    // and render the cursor especially if no hardware mouse device is present and the hardware cursor is disabled by OS.
                     fheroes2::cursor().enableSoftwareEmulation( true );
                 }
                 else {

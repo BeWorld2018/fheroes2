@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2021 - 2025                                             *
+ *   Copyright (C) 2021 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -45,7 +45,6 @@
 #include "ui_button.h"
 #include "ui_dialog.h"
 #include "ui_language.h"
-#include "ui_scrollbar.h"
 #include "ui_text.h"
 #include "ui_window.h"
 
@@ -112,23 +111,9 @@ namespace
             return _isDoubleClicked;
         }
 
-        int getCurrentId() const
-        {
-            return _currentId;
-        }
-
         void initListBackgroundRestorer( fheroes2::Rect roi )
         {
             _listBackground = std::make_unique<fheroes2::ImageRestorer>( fheroes2::Display::instance(), roi.x, roi.y, roi.width, roi.height );
-        }
-
-        void updateScrollBarImage()
-        {
-            const int32_t scrollBarWidth = _scrollbar.width();
-
-            setScrollBarImage( fheroes2::generateScrollbarSlider( _scrollbar, false, _scrollbar.getArea().height, VisibleItemCount(), _size(),
-                                                                  { 0, 0, scrollBarWidth, 8 }, { 0, 7, scrollBarWidth, 8 } ) );
-            _scrollbar.moveToIndex( _topId );
         }
 
         void Redraw() override
@@ -224,7 +209,7 @@ namespace
         // If we don't have many languages, we reduce the maximum dialog height,
         // but not less than enough for 11 elements.
         // We also limit the maximum list height to 22 lines.
-        const int32_t maxDialogHeight = fheroes2::getFontHeight( fheroes2::FontSize::NORMAL ) * std::clamp( static_cast<int32_t>( languages.size() ), 11, 22 )
+        const int32_t maxDialogHeight = fheroes2::getFontHeight( fheroes2::FontSize::NORMAL ) * std::clamp<int32_t>( static_cast<int32_t>( languages.size() ), 11, 22 )
                                         + listAreaOffsetY + listAreaHeightDeduction + listHeightDeduction;
 
         fheroes2::Display & display = fheroes2::Display::instance();

@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <exception>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <list>
 #include <memory>
@@ -41,6 +42,7 @@
 #pragma GCC diagnostic ignored "-Wswitch-default"
 #endif
 
+#include <SDL_error.h>
 #include <SDL_events.h>
 #include <SDL_main.h> // IWYU pragma: keep
 #include <SDL_mouse.h>
@@ -165,7 +167,7 @@ namespace
         }
     }
 
-    class DisplayInitializer
+    class DisplayInitializer final
     {
     public:
         DisplayInitializer()
@@ -191,7 +193,11 @@ namespace
 
             fheroes2::engine().setTitle( GetCaption() );
 
-            SDL_ShowCursor( SDL_DISABLE ); // hide system cursor
+            // Hide system cursor.
+            const int returnValue = SDL_ShowCursor( SDL_DISABLE );
+            if ( returnValue < 0 ) {
+                ERROR_LOG( "Failed to hide system cursor. Error description: " << SDL_GetError() )
+            }
 
             fheroes2::RenderProcessor & renderProcessor = fheroes2::RenderProcessor::instance();
 
@@ -231,7 +237,7 @@ namespace
         std::unique_ptr<fheroes2::SystemInfoRenderer> _systemInfoRenderer;
     };
 
-    class DataInitializer
+    class DataInitializer final
     {
     public:
         DataInitializer()
@@ -325,9 +331,11 @@ int main( int argc, char ** argv )
         const DataInitializer dataInitializer;
 
         ListFiles midiSoundFonts;
-
-        midiSoundFonts.Append( Settings::FindFiles( System::concatPath( "files", "soundfonts" ), ".sf2", false ) );
-        midiSoundFonts.Append( Settings::FindFiles( System::concatPath( "files", "soundfonts" ), ".sf3", false ) );
+        {
+            const std::string path = System::concatPath( "files", "soundfonts" );
+            midiSoundFonts.Append( Settings::FindFiles( path, ".sf2", false ) );
+            midiSoundFonts.Append( Settings::FindFiles( path, ".sf3", false ) );
+        }
 
 #ifdef WITH_DEBUG
         for ( const std::string & file : midiSoundFonts ) {
@@ -368,10 +376,9 @@ int main( int argc, char ** argv )
 
         if ( conf.isShowIntro() ) {
             fheroes2::showTeamInfo();
-
-            Video::ShowVideo( "NWCLOGO.SMK", Video::VideoAction::PLAY_TILL_VIDEO_END );
-            Video::ShowVideo( "CYLOGO.SMK", Video::VideoAction::PLAY_TILL_VIDEO_END );
-            Video::ShowVideo( "H2XINTRO.SMK", Video::VideoAction::PLAY_TILL_VIDEO_END );
+            for ( const char * logo : { "NWCLOGO.SMK", "CYLOGO.SMK", "H2XINTRO.SMK" } ) {
+                Video::ShowVideo( { { logo, Video::VideoControl::PLAY_CUTSCENE } } );
+            }
         }
 
         try {

@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2024 - 2025                                             *
+ *   Copyright (C) 2024 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -169,7 +169,7 @@ namespace
 
 namespace Editor
 {
-    bool openSpellSelectionWindow( std::string title, int & spellLevel, std::vector<int32_t> & selectedSpells, const bool isMultiLevelSelectionEnabled,
+    bool openSpellSelectionWindow( std::string title, int32_t & spellLevel, std::vector<int32_t> & selectedSpells, const bool isMultiLevelSelectionEnabled,
                                    const int32_t minimumEnabledSpells, const bool pickDisabledSpells )
     {
         if ( spellLevel < 1 || spellLevel > 5 ) {
@@ -228,6 +228,16 @@ namespace Editor
         fheroes2::Button buttonCancel;
         background.renderOkayCancelButtons( buttonOk, buttonCancel );
 
+        fheroes2::Button buttonToggleOn;
+        fheroes2::Button buttonToggleOff;
+
+        background.renderButton( buttonToggleOn, isEvilInterface ? ICN::BUTTON_TOGGLE_ALL_ON_EVIL : ICN::BUTTON_TOGGLE_ALL_ON_GOOD, 0, 1, { 0, 7 },
+                                 fheroes2::StandardWindow::Padding::BOTTOM_CENTER );
+        buttonToggleOn.disable();
+
+        background.renderButton( buttonToggleOff, isEvilInterface ? ICN::BUTTON_TOGGLE_ALL_OFF_EVIL : ICN::BUTTON_TOGGLE_ALL_OFF_GOOD, 0, 1, { 0, 7 },
+                                 fheroes2::StandardWindow::Padding::BOTTOM_CENTER );
+
         fheroes2::ButtonGroup levelSelection;
 
         if ( isMultiLevelSelectionEnabled ) {
@@ -279,6 +289,13 @@ namespace Editor
                 buttonOk.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonOk.area() ) );
             }
 
+            if ( buttonToggleOn.isEnabled() ) {
+                buttonToggleOn.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonToggleOn.area() ) );
+            }
+            else if ( buttonToggleOff.isEnabled() ) {
+                buttonToggleOff.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonToggleOff.area() ) );
+            }
+
             buttonCancel.drawOnState( le.isMouseLeftButtonPressedAndHeldInArea( buttonCancel.area() ) );
 
             if ( isMultiLevelSelectionEnabled ) {
@@ -309,15 +326,51 @@ namespace Editor
                 }
             }
 
+            bool toggleAllOn = false;
+            bool toggleAllOff = false;
+
             if ( le.isMouseRightButtonPressedInArea( buttonCancel.area() ) ) {
                 fheroes2::showStandardTextMessage( _( "Cancel" ), _( "Exit this menu without doing anything." ), Dialog::ZERO );
             }
             else if ( le.isMouseRightButtonPressedInArea( buttonOk.area() ) ) {
                 fheroes2::showStandardTextMessage( _( "Okay" ), _( "Click to accept the changes made." ), Dialog::ZERO );
             }
+            else if ( buttonToggleOn.isEnabled() && le.isMouseRightButtonPressedInArea( buttonToggleOn.area() ) ) {
+                fheroes2::showStandardTextMessage( _( "Enable All Spells" ), _( "Click to enable all spells." ), Dialog::ZERO );
+            }
+            else if ( buttonToggleOff.isEnabled() && le.isMouseRightButtonPressedInArea( buttonToggleOff.area() ) ) {
+                fheroes2::showStandardTextMessage( _( "Disable All Spells" ), _( "Click to disable all spells." ), Dialog::ZERO );
+            }
+            else if ( buttonToggleOn.isEnabled() && le.MouseClickLeft( buttonToggleOn.area() ) ) {
+                toggleAllOn = true;
 
-            if ( spellContainer.processEvents( le ) ) {
+                for ( auto & [spell, isSelected] : spells ) {
+                    isSelected = true;
+                }
+
+                buttonToggleOn.disable();
+                buttonToggleOff.enable();
+            }
+            else if ( buttonToggleOff.isEnabled() && le.MouseClickLeft( buttonToggleOff.area() ) ) {
+                toggleAllOff = true;
+
+                for ( auto & [spell, isSelected] : spells ) {
+                    isSelected = false;
+                }
+
+                buttonToggleOff.disable();
+                buttonToggleOn.enable();
+            }
+
+            if ( toggleAllOn || toggleAllOff || spellContainer.processEvents( le ) ) {
                 restorer.restore();
+
+                if ( toggleAllOn ) {
+                    buttonToggleOff.draw();
+                }
+                else if ( toggleAllOff ) {
+                    buttonToggleOn.draw();
+                }
 
                 spellContainer.draw( display );
 

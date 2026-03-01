@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2021 - 2025                                             *
+ *   Copyright (C) 2021 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -24,15 +24,11 @@
 #include <string>
 #include <vector>
 
+#include "game_video.h"
 #include "maps_fileinfo.h"
 
 class IStreamBase;
 class OStreamBase;
-
-namespace Video
-{
-    enum class VideoAction : int;
-}
 
 namespace Campaign
 {
@@ -84,9 +80,9 @@ namespace Campaign
         friend OStreamBase & operator<<( OStreamBase & stream, const ScenarioInfoId & data );
         friend IStreamBase & operator>>( IStreamBase & stream, ScenarioInfoId & data );
 
-        int campaignId{ -1 };
+        int32_t campaignId{ -1 };
 
-        int scenarioId{ -1 };
+        int32_t scenarioId{ -1 };
     };
 
     struct ScenarioBonusData
@@ -120,13 +116,7 @@ namespace Campaign
         static std::vector<Campaign::ScenarioBonusData> getCampaignBonusData( const ScenarioInfoId & scenarioInfo );
     };
 
-    struct ScenarioIntroVideoInfo
-    {
-        std::string fileName;
-        Video::VideoAction action;
-    };
-
-    using VideoSequence = std::vector<ScenarioIntroVideoInfo>;
+    using VideoSequence = std::vector<std::vector<Video::VideoInfo>>;
 
     class ScenarioData
     {
@@ -176,12 +166,12 @@ namespace Campaign
             return _lossCondition;
         }
 
-        const std::vector<ScenarioIntroVideoInfo> & getStartScenarioVideoPlayback() const
+        const VideoSequence & getStartScenarioVideoPlayback() const
         {
             return _startScenarioVideoPlayback;
         }
 
-        const std::vector<ScenarioIntroVideoInfo> & getEndScenarioVideoPlayback() const
+        const VideoSequence & getEndScenarioVideoPlayback() const
         {
             return _endScenarioVideoPlayback;
         }

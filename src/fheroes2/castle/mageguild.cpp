@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2019 - 2025                                             *
+ *   Copyright (C) 2019 - 2026                                             *
  *                                                                         *
  *   Free Heroes2 Engine: http://sourceforge.net/projects/fheroes2         *
  *   Copyright (C) 2009 by Andrey Afletdinov <fheroes2@gmail.com>          *
@@ -23,6 +23,7 @@
 
 #include "mageguild.h"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -151,7 +152,7 @@ void MageGuild::initialize( const int race, const bool hasLibrary )
     for ( size_t level = 1; level <= mageGuildLevels.size(); ++level ) {
         const auto & [freeSlots, hasAdventureSpell] = mageGuildLevels[level - 1];
 
-        std::vector<int> allSpellsOfLevel = Spell::getAllSpellIdsSuitableForSpellBook( fheroes2::checkedCast<int>( level ).value() );
+        std::vector<int32_t> allSpellsOfLevel = Spell::getAllSpellIdsSuitableForSpellBook( fheroes2::checkedCast<int>( level ).value() );
 
         while ( freeSlots > 0 ) {
             assert( !allSpellsOfLevel.empty() );
@@ -203,8 +204,22 @@ void MageGuild::initialize( const int race, const bool hasLibrary, const std::ma
 
     std::array<MageGuildLevelProps, 5> mageGuildLevels = { { { 1, hasLibrary }, { 2, hasLibrary }, { 3, hasLibrary }, { 4, hasLibrary }, { 5, hasLibrary } } };
 
-    bool hasGuaranteedDamageSpel = false;
+    bool hasGuaranteedDamageSpell = false;
     bool hasGuaranteedCancellationSpell = false;
+
+    std::vector<int32_t> guaranteedDamageSpells;
+    std::vector<int32_t> guaranteedCancellationSpells;
+
+    // Make the "guaranteed" spells vectors excluding the banned spells.
+    auto addSpellsToVector = [&spellsInUse]( const std::vector<int32_t> & spells, std::vector<int32_t> & output ) {
+        for ( const int32_t spellId : spells ) {
+            if ( spellsInUse.count( spellId ) == 0 ) {
+                output.push_back( spellId );
+            }
+        }
+    };
+    addSpellsToVector( { Spell::ARROW, Spell::LIGHTNINGBOLT, Spell::FIREBALL, Spell::COLDRAY, Spell::COLDRING }, guaranteedDamageSpells );
+    addSpellsToVector( { Spell::DISPEL, Spell::MASSDISPEL, Spell::ANTIMAGIC, Spell::CURE }, guaranteedCancellationSpells );
 
     // Place the custom spells.
     for ( const auto & [place, spellId] : mustHaveSpells ) {
@@ -234,10 +249,10 @@ void MageGuild::initialize( const int race, const bool hasLibrary, const std::ma
         if ( Spell( spellId ).isAdventure() ) {
             mageGuildLevels[levelIndex].hasAdventureSpell = true;
         }
-        else if ( spellId == Spell::ARROW || spellId == Spell::LIGHTNINGBOLT || spellId == Spell::FIREBALL || spellId == Spell::COLDRAY || spellId == Spell::COLDRING ) {
-            hasGuaranteedDamageSpel = true;
+        else if ( std::find( guaranteedDamageSpells.cbegin(), guaranteedDamageSpells.cend(), spellId ) != guaranteedDamageSpells.cend() ) {
+            hasGuaranteedDamageSpell = true;
         }
-        else if ( spellId == Spell::DISPEL || spellId == Spell::MASSDISPEL || spellId == Spell::ANTIMAGIC || spellId == Spell::CURE ) {
+        else if ( std::find( guaranteedCancellationSpells.cbegin(), guaranteedCancellationSpells.cend(), spellId ) != guaranteedCancellationSpells.cend() ) {
             hasGuaranteedCancellationSpell = true;
         }
 
@@ -256,12 +271,12 @@ void MageGuild::initialize( const int race, const bool hasLibrary, const std::ma
 
         auto & [freeSlots, hasAdventureSpell] = mageGuildLevels[levelIndex];
         if ( freeSlots < 1 ) {
-            return;
+            return false;
         }
 
         // Check for possible duplicates
         if ( const auto [dummy, inserted] = spellsInUse.insert( spell.GetID() ); !inserted ) {
-            return;
+            return false;
         }
 
         if ( hasLibrary && _library[levelIndex] == Spell::NONE ) {
@@ -282,24 +297,38 @@ void MageGuild::initialize( const int race, const bool hasLibrary, const std::ma
         if ( !hasAdventureSpell && spell.isAdventure() ) {
             hasAdventureSpell = true;
         }
+
+        return true;
+    };
+
+    // All spells in the vector have equal probability.
+    auto randomlyAddAnySpellFromVector = [&addSpell]( std::vector<int32_t> & spells ) {
+        while ( !spells.empty() ) {
+            const uint32_t randomIndex = Rand::Get( 0, static_cast<uint32_t>( spells.size() ) - 1 );
+            if ( addSpell( spells[randomIndex] ) ) {
+                // The spell is successfully added.
+                break;
+            }
+
+            // Remove the spell that addition failed.
+            spells.erase( spells.begin() + randomIndex );
+        }
     };
 
     // Mage Guild must always have one of the specific damage spells...
-    if ( !hasGuaranteedDamageSpel ) {
-        addSpell( getGuaranteedDamageSpell() );
-        // TODO: Retry other spells from this group if the spell was not inserted.
+    if ( !hasGuaranteedDamageSpell ) {
+        randomlyAddAnySpellFromVector( guaranteedDamageSpells );
     }
     // ... as well as one of the specific "spell cancellation" spells
     if ( !hasGuaranteedCancellationSpell ) {
-        addSpell( getGuaranteedCancellationSpell() );
-        // TODO: Retry other spells from this group if the spell was not inserted.
+        randomlyAddAnySpellFromVector( guaranteedCancellationSpells );
     }
 
     // Initialize random spells.
     for ( size_t level = 1; level <= mageGuildLevels.size(); ++level ) {
         const auto & [freeSlots, hasAdventureSpell] = mageGuildLevels[level - 1];
 
-        std::vector<int> allSpellsOfLevel = Spell::getAllSpellIdsSuitableForSpellBook( fheroes2::checkedCast<int>( level ).value(), spellsInUse );
+        std::vector<int32_t> allSpellsOfLevel = Spell::getAllSpellIdsSuitableForSpellBook( fheroes2::checkedCast<int>( level ).value(), spellsInUse );
 
         while ( freeSlots > 0 ) {
             assert( !allSpellsOfLevel.empty() );

@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2024 - 2025                                             *
+ *   Copyright (C) 2024 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -80,6 +80,68 @@
 
 namespace
 {
+    class TileRestorer final
+    {
+    public:
+        TileRestorer() = delete;
+
+        explicit TileRestorer( Maps::Tile & tile )
+            : _originalTile( tile )
+            , _copyTile( tile )
+        {
+            // Do nothing.
+        }
+
+        TileRestorer( const TileRestorer & ) = delete;
+
+        TileRestorer( TileRestorer && ) = delete;
+
+        TileRestorer & operator=( const TileRestorer & ) = delete;
+
+        ~TileRestorer()
+        {
+            _originalTile = std::move( _copyTile );
+        }
+
+    private:
+        Maps::Tile & _originalTile;
+        Maps::Tile _copyTile;
+    };
+
+    int32_t daysToNextWeek()
+    {
+        const int32_t currentDay = ( static_cast<int32_t>( world.CountDay() ) % numOfDaysPerWeek );
+        if ( currentDay == 0 ) {
+            // This is the last day of week.
+            return 1;
+        }
+
+        return numOfDaysPerWeek - currentDay + 1;
+    }
+
+    int32_t completedDaysToTarget( const std::list<Route::Step> & steps, const Heroes & hero )
+    {
+        int32_t days{ 0 };
+        uint32_t currentMovePoints = hero.GetMovePoints();
+
+        for ( const auto & step : steps ) {
+            if ( currentMovePoints > step.GetPenalty() ) {
+                currentMovePoints -= step.GetPenalty();
+            }
+            else {
+                ++days;
+                currentMovePoints = hero.GetMaxMovePoints();
+            }
+        }
+
+        if ( currentMovePoints < Maps::Ground::roadPenalty ) {
+            // Increase the number of days if nowhere to go after.
+            ++days;
+        }
+
+        return days;
+    }
+
     bool isFindUltimateArtifactVictoryCondition()
     {
         const Maps::FileInfo & mapInfo = Settings::Get().getCurrentMapInfo();
@@ -246,10 +308,8 @@ namespace
     {
         // TODO: All these spells are not used by AI at the moment.
         switch ( spellId ) {
-        case Spell::EARTHQUAKE:
         case Spell::HAUNT:
         case Spell::IDENTIFYHERO:
-        case Spell::TELEPORT:
         case Spell::VIEWARTIFACTS:
         case Spell::VIEWHEROES:
         case Spell::VIEWMINES:
@@ -264,8 +324,8 @@ namespace
         return true;
     }
 
-    bool HeroesValidObject( const Heroes & hero, const double heroArmyStrength, const int32_t index, AIWorldPathfinder & pathfinder, AI::Planner & ai,
-                            const double armyStrengthThreshold, const bool underHero )
+    bool isValidObjectForHero( const Heroes & hero, const double heroArmyStrength, const int32_t index, AIWorldPathfinder & pathfinder, AI::Planner & ai,
+                               const double armyStrengthThreshold, const bool underHero )
     {
         const Maps::Tile & tile = world.getTile( index );
         const MP2::MapObjectType objectType = tile.getMainObjectType( !underHero );
@@ -325,13 +385,13 @@ namespace
             assert( art.isValid() );
 
             if ( art.GetID() == Artifact::MAGIC_BOOK && hero.HaveSpellBook() ) {
+                // Heroes cannot have more than 1 Magic Book.
                 return false;
             }
 
             const Maps::ArtifactCaptureCondition condition = getArtifactCaptureCondition( tile );
 
-            if ( condition == Maps::ArtifactCaptureCondition::PAY_2000_GOLD || condition == Maps::ArtifactCaptureCondition::PAY_2500_GOLD_AND_3_RESOURCES
-                 || condition == Maps::ArtifactCaptureCondition::PAY_3000_GOLD_AND_5_RESOURCES ) {
+            if ( condition >= Maps::ArtifactCaptureCondition::PAY_2000_GOLD && condition <= Maps::ArtifactCaptureCondition::PAY_3000_GOLD_AND_5_RESOURCES ) {
                 return kingdom.AllowPayment( getArtifactResourceRequirement( tile ) );
             }
 
@@ -429,13 +489,21 @@ namespace
                 return false;
             }
 
-            if ( army.AllTroopsAreUndead() && skillType == Skill::Secondary::LEADERSHIP ) {
+            if ( ( skillType == Skill::Secondary::LEADERSHIP ) && army.AllTroopsAreUndead() ) {
                 // For undead army it's pointless to have Leadership skill.
                 return false;
             }
 
-            if ( !hero.HaveSpellBook() && ( skillType == Skill::Secondary::MYSTICISM || skillType == Skill::Secondary::EAGLE_EYE ) ) {
+            if ( ( skillType == Skill::Secondary::MYSTICISM || skillType == Skill::Secondary::EAGLE_EYE ) && !hero.HaveSpellBook() ) {
                 // It's useless to have Mysticism with no magic book in hands.
+                return false;
+            }
+
+            if ( ( skillType == Skill::Secondary::NAVIGATION ) && world.getWaterPercentage() < 1 ) {
+                // If this is the Navigation skill and then amount of water on the map is less than 1% then it is a useless skill.
+                //
+                // For example, on the biggest map of 144 x 144 tiles, 1% of water corresponds to 207 tiles.
+                // It is going to be highly unlikely to use this skill for the whole map.
                 return false;
             }
 
@@ -445,7 +513,7 @@ namespace
         case MP2::OBJ_TREE_OF_KNOWLEDGE:
             if ( !hero.isVisited( tile ) ) {
                 const Funds & rc = getTreeOfKnowledgeRequirement( tile );
-                // If the payment is required do not waste all resources from the kingdom. Use them wisely.
+                // If the payment is required, do not waste all resources from the kingdom. Use them wisely.
                 if ( rc.GetValidItemsCount() == 0 || kingdom.AllowPayment( rc * 5 ) ) {
                     return true;
                 }
@@ -493,10 +561,20 @@ namespace
                 return false;
             }
 
-            if ( distance > hero.GetMovePoints() && hero.getDailyRestoredSpellPoints() + hero.GetSpellPoints() >= hero.GetMaxSpellPoints() ) {
-                // The Well is located at a distance which cannot be reached by the hero at the current turn.
-                // But if the hero will restore all spell points by the next day there is no reason to even to visit the Well.
-                return false;
+            if ( distance > hero.GetMovePoints() ) {
+                const auto path = pathfinder.buildPath( index, false );
+                assert( !path.empty() );
+                assert( path.back().GetIndex() == index );
+
+                const int32_t daysToTarget = completedDaysToTarget( path, hero );
+                // If this assertion blows up then the above logic is invalid.
+                assert( daysToTarget > 0 );
+
+                if ( ( static_cast<uint32_t>( daysToTarget ) * hero.getDailyRestoredSpellPoints() ) + hero.GetSpellPoints() >= hero.GetMaxSpellPoints() ) {
+                    // The Well is located at a distance which cannot be reached by the hero at the current turn.
+                    // But if the hero will restore all spell points by the next day there is no reason to even to visit the Well.
+                    return false;
+                }
             }
 
             return true;
@@ -580,7 +658,7 @@ namespace
                 return false;
             }
 
-            const int daysActive = numOfDaysPerWeek - world.GetDay() + 1;
+            const uint32_t daysActive = numOfDaysPerWeek - world.GetDay() + 1;
             const double movementBonus = daysActive * GameStatic::getMovementPointBonus( objectType ) - 2.0 * distance;
 
             return movementBonus > 0;
@@ -692,6 +770,44 @@ namespace
         return false;
     }
 
+    int32_t getDaysWhenObjectWillBeValid( const int32_t index, const bool underHero )
+    {
+        const Maps::Tile & tile = world.getTile( index );
+        const MP2::MapObjectType objectType = tile.getMainObjectType( !underHero );
+
+        switch ( objectType ) {
+        case MP2::OBJ_AIR_ALTAR:
+        case MP2::OBJ_ARCHER_HOUSE:
+        case MP2::OBJ_ARTESIAN_SPRING:
+        case MP2::OBJ_BARROW_MOUNDS:
+        case MP2::OBJ_CAVE:
+        case MP2::OBJ_DESERT_TENT:
+        case MP2::OBJ_DWARF_COTTAGE:
+        case MP2::OBJ_EARTH_ALTAR:
+        case MP2::OBJ_EXCAVATION:
+        case MP2::OBJ_FIRE_ALTAR:
+        case MP2::OBJ_GOBLIN_HUT:
+        case MP2::OBJ_HALFLING_HOLE:
+        case MP2::OBJ_MAGIC_GARDEN:
+        case MP2::OBJ_PEASANT_HUT:
+        case MP2::OBJ_RUINS:
+        case MP2::OBJ_TREE_CITY:
+        case MP2::OBJ_TREE_HOUSE:
+        case MP2::OBJ_WAGON_CAMP:
+        case MP2::OBJ_WATCH_TOWER:
+        case MP2::OBJ_WATER_ALTAR:
+        case MP2::OBJ_WATER_WHEEL:
+        case MP2::OBJ_WINDMILL:
+            assert( MP2::isWeekLife( objectType ) );
+
+            return daysToNextWeek();
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
     void addHeroToMove( Heroes * hero, std::vector<Heroes *> & availableHeroes )
     {
         if ( hero->Modes( Heroes::PATROL ) && ( hero->GetPatrolDistance() == 0 ) ) {
@@ -705,7 +821,7 @@ namespace
     }
 
     // Used for caching object validations per hero.
-    class ObjectValidator
+    class ObjectValidator final
     {
     public:
         explicit ObjectValidator( const Heroes & hero, AIWorldPathfinder & pathfinder, AI::Planner & ai )
@@ -718,16 +834,28 @@ namespace
             // Do nothing.
         }
 
-        bool isValid( const int index )
+        bool isCurrentlyValid( const int index )
         {
-            auto iter = _validObjects.find( index );
-            if ( iter != _validObjects.end() ) {
+            auto iter = _currentValidObjects.find( index );
+            if ( iter != _currentValidObjects.end() ) {
                 return iter->second;
             }
 
-            const bool valid = HeroesValidObject( _hero, _heroArmyStrength, index, _pathfinder, _ai, _armyStrengthThreshold, false );
-            _validObjects[index] = valid;
+            const bool valid = isValidObjectForHero( _hero, _heroArmyStrength, index, _pathfinder, _ai, _armyStrengthThreshold, false );
+            _currentValidObjects[index] = valid;
             return valid;
+        }
+
+        int32_t whenGoingToBeValidInDays( const int index )
+        {
+            auto iter = _futureValidObjects.find( index );
+            if ( iter != _futureValidObjects.end() ) {
+                return iter->second;
+            }
+
+            const int32_t days = getDaysWhenObjectWillBeValid( index, false );
+            _futureValidObjects[index] = days;
+            return days;
         }
 
     private:
@@ -742,18 +870,22 @@ namespace
         // Army strength threshold is used to decide whether getting extra monsters is useful.
         const double _armyStrengthThreshold;
 
-        std::map<int, bool> _validObjects;
+        std::map<int, bool> _currentValidObjects;
+
+        std::map<int, int> _futureValidObjects;
     };
 
     // Used for caching of object value estimation per hero.
-    class ObjectValueStorage
+    class ObjectValueStorage final
     {
     public:
         ObjectValueStorage( const Heroes & hero, const AI::Planner & ai, const double ignoreValue )
             : _hero( hero )
             , _ai( ai )
             , _ignoreValue( ignoreValue )
-        {}
+        {
+            // Do nothing.
+        }
 
         double value( const IndexObject & objectInfo, const uint32_t distance )
         {
@@ -765,11 +897,22 @@ namespace
             return iter->second;
         }
 
+        double futureValue( const IndexObject & objectInfo, const uint32_t distance )
+        {
+            const auto [iter, inserted] = _futureObjectValue.try_emplace( objectInfo, 0.0 );
+            if ( inserted ) {
+                iter->second = _ai.getFutureObjectValue( _hero, objectInfo.first, objectInfo.second, _ignoreValue, distance );
+            }
+
+            return iter->second;
+        }
+
     private:
         const Heroes & _hero;
         const AI::Planner & _ai;
         const double _ignoreValue;
         std::map<IndexObject, double> _objectValue;
+        std::map<IndexObject, double> _futureObjectValue;
     };
 
     double getMonsterUpgradeValue( const Army & army, const int monsterId )
@@ -1487,7 +1630,7 @@ double AI::Planner::getGeneralObjectValue( const Heroes & hero, const int32_t in
         return 100;
     }
     case MP2::OBJ_STABLES: {
-        const int daysActive = numOfDaysPerWeek - world.GetDay() + 1;
+        const uint32_t daysActive = numOfDaysPerWeek - world.GetDay() + 1;
         double movementBonus = daysActive * GameStatic::getMovementPointBonus( objectType ) - 2.0 * distanceToObject;
 
         const double upgradeValue = getMonsterUpgradeValue( hero.GetArmy(), Monster::CHAMPION );
@@ -2098,6 +2241,47 @@ double AI::Planner::getObjectValue( const Heroes & hero, const int32_t index, co
     return 0;
 }
 
+double AI::Planner::getFutureObjectValue( const Heroes & hero, const int32_t index, const MP2::MapObjectType objectType, const double valueToIgnore,
+                                          const uint32_t distanceToObject ) const
+{
+    switch ( objectType ) {
+    case MP2::OBJ_AIR_ALTAR:
+    case MP2::OBJ_ARCHER_HOUSE:
+    case MP2::OBJ_ARTESIAN_SPRING:
+    case MP2::OBJ_BARROW_MOUNDS:
+    case MP2::OBJ_CAVE:
+    case MP2::OBJ_DESERT_TENT:
+    case MP2::OBJ_DWARF_COTTAGE:
+    case MP2::OBJ_EARTH_ALTAR:
+    case MP2::OBJ_EXCAVATION:
+    case MP2::OBJ_FIRE_ALTAR:
+    case MP2::OBJ_GOBLIN_HUT:
+    case MP2::OBJ_HALFLING_HOLE:
+    case MP2::OBJ_MAGIC_GARDEN:
+    case MP2::OBJ_PEASANT_HUT:
+    case MP2::OBJ_RUINS:
+    case MP2::OBJ_TREE_CITY:
+    case MP2::OBJ_TREE_HOUSE:
+    case MP2::OBJ_WAGON_CAMP:
+    case MP2::OBJ_WATCH_TOWER:
+    case MP2::OBJ_WATER_ALTAR:
+    case MP2::OBJ_WATER_WHEEL:
+    case MP2::OBJ_WINDMILL: {
+        assert( MP2::isWeekLife( objectType ) );
+
+        Maps::Tile & tile = world.getTile( index );
+        const TileRestorer restorer( tile );
+        Maps::updateObjectInfoTile( tile, false );
+
+        return getObjectValue( hero, index, objectType, valueToIgnore, distanceToObject );
+    }
+    default:
+        break;
+    }
+
+    return getObjectValue( hero, index, objectType, valueToIgnore, distanceToObject );
+}
+
 int AI::Planner::getCourierMainTarget( const Heroes & hero, const double lowestPossibleValue )
 {
     assert( hero.getAIRole() == Heroes::Role::COURIER );
@@ -2305,7 +2489,11 @@ int AI::Planner::getPriorityTarget( Heroes & hero, double & maxPriority )
         // Dimension door path does not include any objects on the way.
         if ( !isDimensionDoor ) {
             for ( const IndexObject & pair : _pathfinder.getObjectsOnTheWay( destination ) ) {
-                if ( !objectValidator.isValid( pair.first ) ) {
+                const bool isValidObject = objectValidator.isCurrentlyValid( pair.first );
+                const int32_t dayToBecomeValid = objectValidator.whenGoingToBeValidInDays( pair.first );
+
+                if ( !isValidObject && dayToBecomeValid < 1 ) {
+                    // This is not a valid object and it is not going to be valid in the future.
                     continue;
                 }
 
@@ -2313,7 +2501,22 @@ int AI::Planner::getPriorityTarget( Heroes & hero, double & maxPriority )
                     continue;
                 }
 
-                const double extraValue = valueStorage.value( pair, 0 );
+                double extraValue = 0;
+
+                if ( isValidObject ) {
+                    extraValue = valueStorage.value( pair, 0 );
+                }
+                else {
+                    const auto path = _pathfinder.buildPath( pair.first, false );
+                    assert( !path.empty() );
+                    assert( path.back().GetIndex() == pair.first );
+
+                    const int32_t daysToReachObject = completedDaysToTarget( path, hero );
+                    if ( daysToReachObject < dayToBecomeValid ) {
+                        extraValue = valueStorage.futureValue( pair, 0 );
+                    }
+                }
+
                 if ( extraValue > 0 ) {
                     // There is no need to reduce the quality of the object even if the path has others.
                     value += extraValue;
@@ -2369,7 +2572,11 @@ int AI::Planner::getPriorityTarget( Heroes & hero, double & maxPriority )
     }
 
     for ( const auto & [idx, objType] : _mapActionObjects ) {
-        if ( !objectValidator.isValid( idx ) ) {
+        const bool isCurrentlyValid = objectValidator.isCurrentlyValid( idx );
+        const int32_t daysToBeAvailable = objectValidator.whenGoingToBeValidInDays( idx );
+
+        if ( !isCurrentlyValid && daysToBeAvailable < 1 ) {
+            // This is not a valid object and it is not going to be valid in the future.
             continue;
         }
 
@@ -2378,7 +2585,31 @@ int AI::Planner::getPriorityTarget( Heroes & hero, double & maxPriority )
             continue;
         }
 
-        double value = valueStorage.value( { idx, objType }, dist );
+        if ( !isCurrentlyValid && useDimensionDoor ) {
+            // TODO: at the moment future objects cannot be estimated for Dimension Door usage.
+            continue;
+        }
+
+        if ( !isCurrentlyValid ) {
+            const auto path = _pathfinder.buildPath( idx, false );
+            assert( !path.empty() );
+            assert( path.back().GetIndex() == idx );
+
+            const int32_t daysToReachObject = completedDaysToTarget( path, hero );
+            if ( daysToReachObject < daysToBeAvailable ) {
+                // Only objects that are not reachable at the moment can be predicted.
+                continue;
+            }
+        }
+
+        double value = 0;
+        if ( isCurrentlyValid ) {
+            value = valueStorage.value( { idx, objType }, dist );
+        }
+        else {
+            value = valueStorage.futureValue( { idx, objType }, dist );
+        }
+
         getObjectValue( idx, dist, value, objType, useDimensionDoor );
 
         if ( dist > 0 && value > maxPriority ) {
@@ -2462,7 +2693,24 @@ int AI::Planner::getPriorityTarget( Heroes & hero, double & maxPriority )
     }
 
     if ( priorityTarget == -1 ) {
-        DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " can't find a meaningful tile to visit" )
+        if ( hero.Modes( Heroes::PATROL ) && hero.GetPatrolCenter() != hero.GetCenter() ) {
+            const int32_t patrolIndex = hero.GetPatrolCenter().x + hero.GetPatrolCenter().y * world.w();
+
+            auto [dist, useDimensionDoor] = getDistanceToTile( _pathfinder, patrolIndex );
+            if ( dist == 0 || MP2::isOffGameActionObject( world.getTile( patrolIndex ).getMainObjectType() ) ) {
+                DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " can't find a meaningful tile to visit and cannot return to the patrol position" )
+                return -1;
+            }
+
+            // This hero is on patrol. Since no tasks to perform go back to the original patrol position.
+            DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " can't find a meaningful tile to visit and returning back to the patrol position" )
+            priorityTarget = patrolIndex;
+            // Make the priority slightly higher than the limit.
+            maxPriority = -dangerousTaskPenalty + 1;
+        }
+        else {
+            DEBUG_LOG( DBG_AI, DBG_INFO, hero.GetName() << " can't find a meaningful tile to visit" )
+        }
     }
     else {
         DEBUG_LOG( DBG_AI, DBG_INFO,
@@ -2761,7 +3009,7 @@ void AI::Planner::HeroesActionNewPosition( Heroes & hero )
 
 bool AI::Planner::isValidHeroObject( const Heroes & hero, const int32_t index, const bool underHero )
 {
-    return HeroesValidObject( hero, hero.GetArmy().GetStrength(), index, _pathfinder, *this, hero.getAIMinimumJoiningArmyStrength(), underHero );
+    return isValidObjectForHero( hero, hero.GetArmy().GetStrength(), index, _pathfinder, *this, hero.getAIMinimumJoiningArmyStrength(), underHero );
 }
 
 void AI::Planner::HeroesPreBattle( HeroBase & hero, bool isAttacking )
@@ -2866,6 +3114,12 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
                     continue;
                 }
 
+                if ( hero->Modes( Heroes::PATROL ) && ( hero->GetPatrolCenter() == hero->GetCenter() ) ) {
+                    // Heroes on patrol are restricted in movement so it is assumed that they aren't blocking the way.
+                    // They actually could block the way but this is done deliberately by the map maker.
+                    continue;
+                }
+
                 const int targetIndex = _pathfinder.getNearestTileToMove( *hero );
                 if ( targetIndex != -1 ) {
                     bestTargetIndex = targetIndex;
@@ -2917,7 +3171,7 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
 
                 if ( dimensionDoorDist > 0 ) {
                     // The rest of the path the hero should do by foot.
-                    bestHero->GetPath().setPath( _pathfinder.buildPath( bestTargetIndex ) );
+                    bestHero->GetPath().setPath( _pathfinder.buildPath( bestTargetIndex, true ) );
 
                     const fheroes2::GameMode gameState = HeroesMove( *bestHero );
                     if ( gameState != fheroes2::GameMode::END_TURN ) {
@@ -2927,7 +3181,7 @@ fheroes2::GameMode AI::Planner::HeroesTurn( VecHeroes & heroes, uint32_t & curre
                 }
             }
             else {
-                bestHero->GetPath().setPath( _pathfinder.buildPath( bestTargetIndex ) );
+                bestHero->GetPath().setPath( _pathfinder.buildPath( bestTargetIndex, true ) );
 
                 const fheroes2::GameMode gameState = HeroesMove( *bestHero );
                 if ( gameState != fheroes2::GameMode::END_TURN ) {

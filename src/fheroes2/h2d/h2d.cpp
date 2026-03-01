@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2021 - 2025                                             *
+ *   Copyright (C) 2021 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -32,6 +32,12 @@
 namespace
 {
     const std::set<std::string, std::less<>> resurrectionH2DFileListSample{
+        "abandoned_mine_crack.image",
+        "abandoned_mine_desert.image",
+        "abandoned_mine_lava.image",
+        "abandoned_mine_rock.image",
+        "abandoned_mine_snow.image",
+        "abandoned_mine_swamp.image",
         "adventure-map-grass-cave-diff-01.image",
         "adventure-map-grass-cave-diff-02.image",
         "barbarian_castle_captain_quarter_left_side.image",
@@ -65,7 +71,9 @@ namespace
         "main_menu_editor_icon.image",
         "main_menu_editor_pressed_button.image",
         "main_menu_editor_released_button.image",
+        "mass-dispel-contour.image",
         "missing_sphinx_part.image",
+        "monocle.image",
         "observation_tower_desert_bottom_part.image",
         "observation_tower_desert_right_part.image",
         "observation_tower_generic_bottom_part.image",
@@ -74,9 +82,14 @@ namespace
         "observation_tower_snow_top_part.image",
         "petrification_spell_icon.image",
         "petrification_spell_icon_mini.image",
+        "resolution_icon.image",
         "sorceress_castle_captain_quarter_left_side.image",
         "swordsman_walking_frame_extra_part.image",
         "swordsman_walking_frame_extra_part_mask.image",
+        "toggle-all-off-pressed.image",
+        "toggle-all-off-released.image",
+        "toggle-all-on-pressed.image",
+        "toggle-all-on-released.image",
         "townbkg2_fix.image",
         "twnsspec_fix.image",
         "wizard_bay_diff_to_twnzdock.image",

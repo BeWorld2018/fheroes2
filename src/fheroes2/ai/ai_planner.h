@@ -1,6 +1,6 @@
 /***************************************************************************
  *   fheroes2: https://github.com/ihhub/fheroes2                           *
- *   Copyright (C) 2024 - 2025                                             *
+ *   Copyright (C) 2024 - 2026                                             *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -173,7 +173,10 @@ namespace AI
 
         void HeroesActionComplete( Heroes & hero, const int32_t tileIndex, const MP2::MapObjectType objectType );
 
-        void resetPathfinder();
+        void resetPathfinder()
+        {
+            _pathfinder.reset();
+        }
 
         void revealFog( const Maps::Tile & tile, const Kingdom & kingdom );
 
@@ -181,6 +184,9 @@ namespace AI
 
         double getObjectValue( const Heroes & hero, const int32_t index, const MP2::MapObjectType objectType, const double valueToIgnore,
                                const uint32_t distanceToObject ) const;
+
+        double getFutureObjectValue( const Heroes & hero, const int32_t index, const MP2::MapObjectType objectType, const double valueToIgnore,
+                                     const uint32_t distanceToObject ) const;
 
         // Returns the strength of the army guarding the given tile. Note that the army is obtained by calling
         // Army::setFromTile(), so this method is not suitable for hero armies or castle garrisons.
