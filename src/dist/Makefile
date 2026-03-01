@@ -112,8 +112,8 @@ ifdef FHEROES2_WITH_SYSTEM_SMACKER
 LIBS := $(LIBS) -lsmacker
 endif
 
-ifeq ($(PLATFORM),MorphOS)
-LIBS := $(LIBS) -lz_shared $(LDLIBS)
+ifeq ($(PLATFORM),morphos)
+LIBS := $(LIBS) $(LDLIBS)
 else
 LIBS := $(LIBS) -lz $(LDLIBS)
 endif

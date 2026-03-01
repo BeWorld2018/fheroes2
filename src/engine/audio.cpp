@@ -1116,11 +1116,13 @@ void Music::setMidiTimidityCfg( const std::string & path )
         return;
     }
 
+#ifndef __MORPHOS__
 #if SDL_MIXER_VERSION_ATLEAST( 2, 6, 0 )
     if ( Mix_SetTimidityCfg( System::encLocalToUTF8( path ).c_str() ) == 0 ) {
         ERROR_LOG( "Failed to set the path to the timidity.cfg file to " << path << ". The error: " << Mix_GetError() )
     }
 #else
     ERROR_LOG( "Failed to set the path to the timidity.cfg file to " << path << ". The error: operation not supported" )
+#endif
 #endif
 }

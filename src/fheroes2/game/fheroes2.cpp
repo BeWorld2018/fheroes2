@@ -88,7 +88,7 @@
 #define STRINGIFY( x ) #x
 #define TOSTRING( x ) STRINGIFY( x )
 #define __AMIGAVER__ TOSTRING( MAJOR_VERSION ) "." TOSTRING( MINOR_VERSION ) "." TOSTRING( INTERMEDIATE_VERSION )
-unsigned long __stack = 1024 * 1024;
+unsigned long __stack = 1024 * 1024 * 2;
 static const std::string morphos_versions_tag = "$VER: fheroes2 " __AMIGAVER__ " (" __AMIGADATE__ ")";
 #endif
 
